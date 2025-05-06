@@ -1,7 +1,6 @@
-import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
-import { version } from '../../../../package.json';
+import { getVersion } from '@/lib/version';
 
 export type ApiVersionResponse = {
   version: string;
@@ -10,10 +9,10 @@ export type ApiVersionResponse = {
 export const PATH = '/api/version';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.get(PATH, { preHandler: [userMiddleware, administratorMiddleware] }, async (_, res) => {
-      return res.send({
-        version,
-      });
+    server.get(PATH, { preHandler: [userMiddleware] }, async (_, res) => {
+      const details = getVersion();
+
+      return res.send(details);
     });
 
     done();

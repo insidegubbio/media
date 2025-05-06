@@ -42,11 +42,15 @@ COPY --from=builder /zipline/mimes.json ./mimes.json
 COPY --from=builder /zipline/code.json ./code.json
 COPY --from=builder /zipline/generated ./generated
 
+
 RUN pnpm build:prisma
 
 # clean
 RUN rm -rf /tmp/* /root/*
 
 ENV NODE_ENV=production
+
+ARG ZIPLINE_GIT_SHA
+ENV ZIPLINE_GIT_SHA=${ZIPLINE_GIT_SHA:-"unknown"}
 
 CMD ["node", "--enable-source-maps", "build/server"]

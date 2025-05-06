@@ -19,7 +19,8 @@
     "db:prototype": "prisma db push --skip-generate && prisma generate --no-hints",
     "db:migrate": "prisma migrate dev --create-only",
     "docker:engine": "colima start --mount $PWD/themes:w --mount $PWD/uploads:w --mount $PWD/public:w",
-    "docker:compose:dev:up": "docker-compose --file docker-compose.dev.yml up --build -d",
+    "docker:compose:dev:build": "docker-compose --file docker-compose.dev.yml build --build-arg ZIPLINE_GIT_SHA=$(git rev-parse HEAD)",
+    "docker:compose:dev:up": "docker-compose --file docker-compose.dev.yml up -d",
     "docker:compose:dev:down": "docker-compose --file docker-compose.dev.yml down",
     "docker:compose:dev:logs": "docker-compose --file docker-compose.dev.yml logs -f"
   },

@@ -46,6 +46,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+          build-args: |
+            ZIPLINE_GIT_SHA=${{ steps.sha.outputs.short_sha }}
           tags: |
             ghcr.io/diced/zipline:${{ steps.version.outputs.zipline_version }}-${{ matrix.arch }}
             ghcr.io/diced/zipline:${{ steps.version.outputs.zipline_version }}-${{ steps.sha.outputs.short_sha }}-${{ matrix.arch }}
