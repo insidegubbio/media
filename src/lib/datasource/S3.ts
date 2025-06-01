@@ -123,6 +123,7 @@ export class S3Datasource extends Datasource {
 
       this.logger.debug('access test successful');
     } catch (e) {
+      console.error(e);
       this.logger
         .error('there was an error while testing access', e as Record<string, unknown>)
         .error('zipline will now exit');
