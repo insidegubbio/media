@@ -1,6 +1,7 @@
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -30,6 +31,7 @@ export default fastifyPlugin(
       url: PATH,
       method: ['PATCH', 'DELETE'],
       preHandler: [userMiddleware],
+      ...secondlyRatelimit(2),
       handler: async (req, res) => {
         const { files, favorite, folder } = req.body;
 

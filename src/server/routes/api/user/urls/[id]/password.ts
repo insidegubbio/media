@@ -1,6 +1,7 @@
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import fastifyPlugin from 'fastify-plugin';
 export type ApiUserUrlsIdPasswordResponse = {
   success: boolean;
@@ -19,7 +20,7 @@ const logger = log('api').c('user').c('urls').c('[id]').c('password');
 export const PATH = '/api/user/urls/:id/password';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.post<{ Params: Params; Body: Body }>(PATH, async (req, res) => {
+    server.post<{ Params: Params; Body: Body }>(PATH, { ...secondlyRatelimit(2) }, async (req, res) => {
       const url = await prisma.url.findFirst({
         where: {
           OR: [{ id: req.params.id }, { code: req.params.id }, { vanity: req.params.id }],

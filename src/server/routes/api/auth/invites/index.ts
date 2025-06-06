@@ -7,6 +7,7 @@ import { parseExpiry } from '@/lib/uploader/parseHeaders';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 
 export type ApiAuthInvitesResponse = Invite | Invite[];
 
@@ -20,50 +21,47 @@ const logger = log('api').c('auth').c('invites');
 export const PATH = '/api/auth/invites';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.route<{
-      Body: Body;
-    }>({
-      url: PATH,
-      method: ['GET', 'POST'],
-      preHandler: [userMiddleware, administratorMiddleware],
-      handler: async (req, res) => {
-        if (req.method === 'POST') {
-          const { expiresAt, maxUses } = req.body;
+    server.post<{ Body: Body }>(
+      PATH,
+      { preHandler: [userMiddleware, administratorMiddleware], ...secondlyRatelimit(1) },
+      async (req, res) => {
+        const { expiresAt, maxUses } = req.body;
 
-          if (!expiresAt) return res.badRequest('expiresAt is required');
-          let expires = null;
+        if (!expiresAt) return res.badRequest('expiresAt is required');
+        let expires = null;
 
-          if (expiresAt !== 'never') expires = parseExpiry(expiresAt);
+        if (expiresAt !== 'never') expires = parseExpiry(expiresAt);
 
-          const invite = await prisma.invite.create({
-            data: {
-              code: randomCharacters(config.invites.length),
-              expiresAt: expires,
-              maxUses: maxUses ?? null,
-              inviterId: req.user.id,
-            },
-            include: {
-              inviter: inviteInviterSelect,
-            },
-          });
-
-          logger.info(`${req.user.username} created an invite`, {
-            maxUses,
-            expiresAt,
-            code: invite.code,
-          });
-
-          return res.send(invite);
-        }
-
-        const invites = await prisma.invite.findMany({
+        const invite = await prisma.invite.create({
+          data: {
+            code: randomCharacters(config.invites.length),
+            expiresAt: expires,
+            maxUses: maxUses ?? null,
+            inviterId: req.user.id,
+          },
           include: {
             inviter: inviteInviterSelect,
           },
         });
 
-        return res.send(invites);
+        logger.info(`${req.user.username} created an invite`, {
+          maxUses,
+          expiresAt,
+          code: invite.code,
+        });
+
+        return res.send(invite);
       },
+    );
+
+    server.get(PATH, { preHandler: [userMiddleware, administratorMiddleware] }, async (req, res) => {
+      const invites = await prisma.invite.findMany({
+        include: {
+          inviter: inviteInviterSelect,
+        },
+      });
+
+      return res.send(invites);
     });
 
     done();

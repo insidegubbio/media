@@ -3,6 +3,7 @@ import { createToken, encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -33,7 +34,7 @@ export default fastifyPlugin(
       });
     });
 
-    server.patch(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
+    server.patch(PATH, { preHandler: [userMiddleware], ...secondlyRatelimit(1) }, async (req, res) => {
       const user = await prisma.user.update({
         where: {
           id: req.user.id,

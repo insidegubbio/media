@@ -3,6 +3,7 @@ import { reloadSettings } from '@/lib/config';
 import { readDatabaseSettings } from '@/lib/config/read';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { readThemes } from '@/lib/theme/file';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -79,6 +80,7 @@ export default fastifyPlugin(
       PATH,
       {
         preHandler: [userMiddleware, administratorMiddleware],
+        ...secondlyRatelimit(1),
       },
       async (req, res) => {
         const settings = await prisma.zipline.findFirst();

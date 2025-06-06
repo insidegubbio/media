@@ -2,13 +2,14 @@ import { config } from '@/lib/config';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
-import { Export } from '../../../../../generated/client';
 import fastifyPlugin from 'fastify-plugin';
 import { Zip, ZipPassThrough } from 'fflate';
 import { createWriteStream } from 'fs';
 import { rm, stat } from 'fs/promises';
 import { join } from 'path';
+import { Export } from '../../../../../generated/client';
 
 export type ApiUserExportResponse = {
   running?: boolean;
@@ -71,7 +72,7 @@ export default fastifyPlugin(
       return res.send({ deleted: true });
     });
 
-    server.post(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
+    server.post(PATH, { preHandler: [userMiddleware], ...secondlyRatelimit(5) }, async (req, res) => {
       const files = await prisma.file.findMany({
         where: { userId: req.user.id },
       });

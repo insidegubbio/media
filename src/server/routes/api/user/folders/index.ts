@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { fileSelect } from '@/lib/db/models/file';
 import { Folder, cleanFolder, cleanFolders } from '@/lib/db/models/folder';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -23,48 +24,38 @@ const logger = log('api').c('user').c('folders');
 export const PATH = '/api/user/folders';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.route<{
-      Querystring: Query;
-    }>({
-      url: PATH,
-      method: 'GET',
-      preHandler: [userMiddleware],
-      handler: async (req, res) => {
-        const { noincl } = req.query;
+    server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
+      const { noincl } = req.query;
 
-        const folders = await prisma.folder.findMany({
-          where: {
-            userId: req.user.id,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          ...(!noincl && {
-            include: {
-              files: {
-                select: {
-                  ...fileSelect,
-                  password: true,
-                },
-                orderBy: {
-                  createdAt: 'desc',
-                },
+      const folders = await prisma.folder.findMany({
+        where: {
+          userId: req.user.id,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        ...(!noincl && {
+          include: {
+            files: {
+              select: {
+                ...fileSelect,
+                password: true,
+              },
+              orderBy: {
+                createdAt: 'desc',
               },
             },
-          }),
-        });
+          },
+        }),
+      });
 
-        return res.send(cleanFolders(folders));
-      },
+      return res.send(cleanFolders(folders));
     });
 
-    server.route<{
-      Body: Body;
-    }>({
-      url: PATH,
-      method: 'POST',
-      preHandler: [userMiddleware],
-      handler: async (req, res) => {
+    server.post<{ Body: Body }>(
+      PATH,
+      { preHandler: [userMiddleware], ...secondlyRatelimit(2) },
+      async (req, res) => {
         const { name, isPublic } = req.body;
         let files = req.body.files;
         if (!name) return res.badRequest('Name is required');
@@ -115,7 +106,7 @@ export default fastifyPlugin(
 
         return res.send(cleanFolder(folder));
       },
-    });
+    );
 
     done();
   },

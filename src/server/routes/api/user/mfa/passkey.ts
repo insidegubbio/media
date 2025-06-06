@@ -1,12 +1,13 @@
-import { RegistrationResponseJSON } from '@github/webauthn-json/dist/types/browser-ponyfill';
-import { Prisma } from '../../../../../../generated/client';
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { User } from '@/lib/db/models/user';
-import { userMiddleware } from '@/server/middleware/user';
-import fastifyPlugin from 'fastify-plugin';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
+import { userMiddleware } from '@/server/middleware/user';
+import { RegistrationResponseJSON } from '@github/webauthn-json/dist/types/browser-ponyfill';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import fastifyPlugin from 'fastify-plugin';
+import { Prisma } from '../../../../../../generated/client';
 
 export type ApiUserMfaPasskeyResponse = User | User['passkeys'];
 
@@ -38,7 +39,7 @@ export default fastifyPlugin(
       PATH,
       {
         preHandler: [userMiddleware, passkeysEnabledHandler],
-        config: { rateLimit: { max: 1, timeWindow: '5 seconds', allowList: [] } },
+        ...secondlyRatelimit(1),
       },
       async (req, res) => {
         const { reg, name } = req.body;

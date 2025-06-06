@@ -1,4 +1,5 @@
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { clearZeros, clearZerosFiles } from '@/lib/server-util/clearZeros';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -30,6 +31,7 @@ export default fastifyPlugin(
       PATH,
       {
         preHandler: [userMiddleware, administratorMiddleware],
+        ...secondlyRatelimit(1),
       },
       async (req, res) => {
         const files = await clearZerosFiles();

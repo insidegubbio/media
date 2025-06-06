@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { getZipline } from '@/lib/db/models/zipline';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import fastifyPlugin from 'fastify-plugin';
 
 export type ApiSetupResponse = {
@@ -27,7 +28,7 @@ export default fastifyPlugin(
       return res.send({ firstSetup });
     });
 
-    server.post<{ Body: Body }>(PATH, async (req, res) => {
+    server.post<{ Body: Body }>(PATH, secondlyRatelimit(5), async (req, res) => {
       const { firstSetup, id } = await getZipline();
 
       if (!firstSetup) return res.forbidden();

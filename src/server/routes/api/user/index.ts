@@ -2,6 +2,7 @@ import { hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
 import { getSession, saveSession } from '@/server/session';
 import fastifyPlugin from 'fastify-plugin';
@@ -38,68 +39,79 @@ export default fastifyPlugin(
       return res.send({ user: req.user, token: req.cookies.zipline_token });
     });
 
-    server.patch<{ Body: Body }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      if (req.body.username) {
-        const existing = await prisma.user.findUnique({
+    server.patch<{ Body: Body }>(
+      PATH,
+      {
+        preHandler: [userMiddleware],
+        ...secondlyRatelimit(1),
+      },
+      async (req, res) => {
+        if (req.body.username) {
+          const existing = await prisma.user.findUnique({
+            where: {
+              username: req.body.username,
+            },
+          });
+
+          if (existing) return res.badRequest('Username already exists');
+        }
+
+        const user = await prisma.user.update({
           where: {
-            username: req.body.username,
+            id: req.user.id,
+          },
+          data: {
+            ...(req.body.username && { username: req.body.username }),
+            ...(req.body.password && { password: await hashPassword(req.body.password) }),
+            ...(req.body.avatar !== undefined && { avatar: req.body.avatar || null }),
+            ...(req.body.view && {
+              view: {
+                ...req.user.view,
+                ...(req.body.view.enabled !== undefined && { enabled: req.body.view.enabled || false }),
+                ...(req.body.view.content !== undefined && { content: req.body.view.content || null }),
+                ...(req.body.view.embed !== undefined && { embed: req.body.view.embed || false }),
+                ...(req.body.view.embedTitle !== undefined && {
+                  embedTitle: req.body.view.embedTitle || null,
+                }),
+                ...(req.body.view.embedDescription !== undefined && {
+                  embedDescription: req.body.view.embedDescription || null,
+                }),
+                ...(req.body.view.embedColor !== undefined && {
+                  embedColor: req.body.view.embedColor || null,
+                }),
+                ...(req.body.view.embedSiteName !== undefined && {
+                  embedSiteName: req.body.view.embedSiteName || null,
+                }),
+                ...(req.body.view.align !== undefined && { align: req.body.view.align || 'center' }),
+                ...(req.body.view.showMimetype !== undefined && {
+                  showMimetype: req.body.view.showMimetype || false,
+                }),
+                ...(req.body.view.showTags !== undefined && { showTags: req.body.view.showTags || false }),
+                ...(req.body.view.showFolder !== undefined && {
+                  showFolder: req.body.view.showFolder || false,
+                }),
+              },
+            }),
+          },
+          select: {
+            ...userSelect,
+            password: true,
+            token: true,
           },
         });
 
-        if (existing) return res.badRequest('Username already exists');
-      }
+        const session = await getSession(req, res);
+        await saveSession(session, user);
 
-      const user = await prisma.user.update({
-        where: {
-          id: req.user.id,
-        },
-        data: {
-          ...(req.body.username && { username: req.body.username }),
-          ...(req.body.password && { password: await hashPassword(req.body.password) }),
-          ...(req.body.avatar !== undefined && { avatar: req.body.avatar || null }),
-          ...(req.body.view && {
-            view: {
-              ...req.user.view,
-              ...(req.body.view.enabled !== undefined && { enabled: req.body.view.enabled || false }),
-              ...(req.body.view.content !== undefined && { content: req.body.view.content || null }),
-              ...(req.body.view.embed !== undefined && { embed: req.body.view.embed || false }),
-              ...(req.body.view.embedTitle !== undefined && { embedTitle: req.body.view.embedTitle || null }),
-              ...(req.body.view.embedDescription !== undefined && {
-                embedDescription: req.body.view.embedDescription || null,
-              }),
-              ...(req.body.view.embedColor !== undefined && { embedColor: req.body.view.embedColor || null }),
-              ...(req.body.view.embedSiteName !== undefined && {
-                embedSiteName: req.body.view.embedSiteName || null,
-              }),
-              ...(req.body.view.align !== undefined && { align: req.body.view.align || 'center' }),
-              ...(req.body.view.showMimetype !== undefined && {
-                showMimetype: req.body.view.showMimetype || false,
-              }),
-              ...(req.body.view.showTags !== undefined && { showTags: req.body.view.showTags || false }),
-              ...(req.body.view.showFolder !== undefined && {
-                showFolder: req.body.view.showFolder || false,
-              }),
-            },
-          }),
-        },
-        select: {
-          ...userSelect,
-          password: true,
-          token: true,
-        },
-      });
+        delete (user as any).password;
 
-      const session = await getSession(req, res);
-      await saveSession(session, user);
+        logger.info(`${req.user.username} updated their user`, {
+          updated: Object.keys(req.body),
+        });
 
-      delete (user as any).password;
-
-      logger.info(`${req.user.username} updated their user`, {
-        updated: Object.keys(req.body),
-      });
-
-      return res.send({ user, token: req.cookies.zipline_token });
-    });
+        return res.send({ user, token: req.cookies.zipline_token });
+      },
+    );
 
     done();
   },

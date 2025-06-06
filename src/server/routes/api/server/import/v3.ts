@@ -2,6 +2,7 @@ import { createToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { Export3, validateExport } from '@/lib/import/version3/validateExport';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
@@ -33,6 +34,7 @@ export default fastifyPlugin(
         preHandler: [userMiddleware, administratorMiddleware],
         // 24gb, just in case
         bodyLimit: 24 * 1024 * 1024 * 1024,
+        ...secondlyRatelimit(5),
       },
       async (req, res) => {
         if (req.user.role !== 'SUPERADMIN') return res.forbidden('not super admin');

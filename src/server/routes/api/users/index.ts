@@ -3,13 +3,14 @@ import { createToken, hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
-import { Role } from '../../../../../generated/client';
 import fastifyPlugin from 'fastify-plugin';
 import { readFile } from 'fs/promises';
 import { z } from 'zod';
+import { Role } from '../../../../../generated/client';
 
 export type ApiUsersResponse = User[] | User;
 
@@ -49,7 +50,7 @@ export default fastifyPlugin(
 
     server.post<{ Querystring: Query; Body: Body }>(
       PATH,
-      { preHandler: [userMiddleware, administratorMiddleware] },
+      { preHandler: [userMiddleware, administratorMiddleware], ...secondlyRatelimit(1) },
       async (req, res) => {
         const { username, password, avatar, role } = req.body;
 

@@ -109,7 +109,7 @@ async function main() {
         max: config.ratelimit.max,
         timeWindow: config.ratelimit.window ?? undefined,
         keyGenerator: (req) => {
-          return req.user?.id;
+          return `${req.user?.id ?? req.ip}-${req.url}-${req.method}`;
         },
         allowList: async (req, key) => {
           if (config.ratelimit.adminBypass && isAdministrator(req.user?.role)) return true;
@@ -117,6 +117,11 @@ async function main() {
           if (Object.keys(req.headers).includes('x-zipline-p-filename')) return true;
 
           return false;
+        },
+        onExceeded(req, key) {
+          logger
+            .c('ratelimit')
+            .warn(`rate limit exceeded for user ${req.user?.username ?? req.ip ?? 'unknown'}`, { key });
         },
       });
     } catch (e) {

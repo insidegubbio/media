@@ -2,10 +2,11 @@ import { config } from '@/lib/config';
 import { createToken, hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { User, userSelect } from '@/lib/db/models/user';
+import { log } from '@/lib/logger';
+import { secondlyRatelimit } from '@/lib/ratelimits';
 import { getSession, saveSession } from '@/server/session';
 import fastifyPlugin from 'fastify-plugin';
 import { ApiLoginResponse } from './login';
-import { log } from '@/lib/logger';
 
 export type ApiAuthRegisterResponse = ApiLoginResponse;
 
@@ -20,85 +21,78 @@ const logger = log('api').c('auth').c('register');
 export const PATH = '/api/auth/register';
 export default fastifyPlugin(
   (server, _, done) => {
-    server.route<{
-      Body: Body;
-    }>({
-      url: PATH,
-      method: ['POST'],
-      handler: async (req, res) => {
-        const session = await getSession(req, res);
+    server.post<{ Body: Body }>(PATH, { ...secondlyRatelimit(5) }, async (req, res) => {
+      const session = await getSession(req, res);
 
-        const { username, password, code } = req.body;
+      const { username, password, code } = req.body;
 
-        if (code && !config.invites.enabled) return res.badRequest("Invites aren't enabled");
-        if (!code && !config.features.userRegistration)
-          return res.badRequest('User registration is disabled');
+      if (code && !config.invites.enabled) return res.badRequest("Invites aren't enabled");
+      if (!code && !config.features.userRegistration) return res.badRequest('User registration is disabled');
 
-        if (!username) return res.badRequest('Username is required');
-        if (!password) return res.badRequest('Password is required');
+      if (!username) return res.badRequest('Username is required');
+      if (!password) return res.badRequest('Password is required');
 
-        const oUser = await prisma.user.findUnique({
-          where: {
-            username,
-          },
-        });
-        if (oUser) return res.badRequest('Username is taken');
-
-        if (code) {
-          const invite = await prisma.invite.findFirst({
-            where: {
-              OR: [{ id: code }, { code }],
-            },
-          });
-
-          if (!invite) return res.badRequest('Invalid invite code');
-          if (invite.expiresAt && new Date(invite.expiresAt) < new Date())
-            return res.badRequest('Invalid invite code');
-          if (invite.maxUses && invite.uses >= invite.maxUses) return res.badRequest('Invalid invite code');
-
-          await prisma.invite.update({
-            where: {
-              id: invite.id,
-            },
-            data: {
-              uses: invite.uses + 1,
-            },
-          });
-
-          logger.info('invite used', {
-            user: username,
-            invite: invite.id,
-          });
-        }
-
-        const user = await prisma.user.create({
-          data: {
-            username,
-            password: await hashPassword(password),
-            role: 'USER',
-            token: createToken(),
-          },
-          select: {
-            ...userSelect,
-            password: true,
-            token: true,
-          },
-        });
-
-        await saveSession(session, <User>user);
-
-        delete (user as any).password;
-
-        logger.info('user registered successfully', {
+      const oUser = await prisma.user.findUnique({
+        where: {
           username,
-          ip: req.ip ?? 'unknown',
-          ua: req.headers['user-agent'],
+        },
+      });
+      if (oUser) return res.badRequest('Username is taken');
+
+      if (code) {
+        const invite = await prisma.invite.findFirst({
+          where: {
+            OR: [{ id: code }, { code }],
+          },
         });
 
-        return res.send({
-          user,
+        if (!invite) return res.badRequest('Invalid invite code');
+        if (invite.expiresAt && new Date(invite.expiresAt) < new Date())
+          return res.badRequest('Invalid invite code');
+        if (invite.maxUses && invite.uses >= invite.maxUses) return res.badRequest('Invalid invite code');
+
+        await prisma.invite.update({
+          where: {
+            id: invite.id,
+          },
+          data: {
+            uses: invite.uses + 1,
+          },
         });
-      },
+
+        logger.info('invite used', {
+          user: username,
+          invite: invite.id,
+        });
+      }
+
+      const user = await prisma.user.create({
+        data: {
+          username,
+          password: await hashPassword(password),
+          role: 'USER',
+          token: createToken(),
+        },
+        select: {
+          ...userSelect,
+          password: true,
+          token: true,
+        },
+      });
+
+      await saveSession(session, <User>user);
+
+      delete (user as any).password;
+
+      logger.info('user registered successfully', {
+        username,
+        ip: req.ip ?? 'unknown',
+        ua: req.headers['user-agent'],
+      });
+
+      return res.send({
+        user,
+      });
     });
 
     done();
