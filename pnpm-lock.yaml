@@ -101,9 +101,6 @@ importers:
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
-      exif-be-gone:
-        specifier: ^1.5.1
-        version: 1.5.1
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
@@ -2817,10 +2814,6 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
-
-  exif-be-gone@1.5.1:
-    resolution: {integrity: sha512-+fV9PoomNVR5Hmp0n1c0ZVl78/GaFrpnC0t7q4F9Aey8NcL+7Lutcez8KY2Ni30NWpvgLXawqiRFFwtdo4QgFg==}
-    hasBin: true
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
@@ -7870,8 +7863,6 @@ snapshots:
   eventemitter3@4.0.7: {}
 
   events@3.3.0: {}
-
-  exif-be-gone@1.5.1: {}
 
   extend@3.0.2: {}
 

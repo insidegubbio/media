@@ -112,9 +112,9 @@ export async function handleFile({
   let removedGps = false;
 
   if (mimetype.startsWith('image/') && config.files.removeGpsMetadata) {
-    file.buffer = await removeGps(file.buffer);
+    const removed = removeGps(file.buffer);
 
-    if (file.buffer.length < file.file.bytesRead) {
+    if (removed) {
       logger.c('gps').debug(`removed gps metadata from ${file.filename}`, {
         nsize: bytes(file.buffer.length),
         osize: bytes(file.file.bytesRead),
