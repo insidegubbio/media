@@ -221,12 +221,14 @@ export const schema = z.object({
         clientId: z.string(),
         clientSecret: z.string(),
         redirectUri: z.string().url().nullable().default(null),
+        whitelistIds: z.array(z.string()).default([]),
       })
       .or(
         z.object({
           clientId: z.undefined(),
           clientSecret: z.undefined(),
           redirectUri: z.undefined(),
+          whitelistIds: z.undefined().or(z.array(z.string()).default([])),
         }),
       ),
     github: z

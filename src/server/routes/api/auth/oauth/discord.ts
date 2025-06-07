@@ -80,6 +80,16 @@ async function discordOauth({ code, host, state }: OAuthQuery, logger: Logger): 
 
   logger.debug('user', { '@me': userJson });
 
+  if (config.oauth.discord.whitelistIds?.length) {
+    if (!config.oauth.discord.whitelistIds.includes(userJson.id)) {
+      logger.warn('Discord user not whitelisted', { userId: userJson.id });
+      return {
+        error: 'You are not whitelisted to use Discord OAuth',
+        error_code: 403,
+      };
+    }
+  }
+
   const avatar = userJson.avatar
     ? `https://cdn.discordapp.com/avatars/${userJson.id}/${userJson.avatar}.png`
     : `https://cdn.discordapp.com/embed/avatars/${userJson.discriminator % 5}.png`;

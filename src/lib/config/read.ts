@@ -235,6 +235,7 @@ export const DATABASE_TO_PROP = {
   oauthDiscordClientId: 'oauth.discord.clientId',
   oauthDiscordClientSecret: 'oauth.discord.clientSecret',
   oauthDiscordRedirectUri: 'oauth.discord.redirectUri',
+  oauthDiscordWhitelistIds: 'oauth.discord.whitelistIds',
 
   oauthGoogleClientId: 'oauth.google.clientId',
   oauthGoogleClientSecret: 'oauth.google.clientSecret',
