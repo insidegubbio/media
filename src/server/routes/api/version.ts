@@ -7,6 +7,7 @@ import fastifyPlugin from 'fastify-plugin';
 export type ApiVersionResponse = {
   details: ReturnType<typeof getVersion>;
   data: VersionAPI;
+  cached: true;
 };
 
 interface VersionAPI {
@@ -31,6 +32,9 @@ interface VersionAPI {
 
 const logger = log('api').c('version');
 
+let cachedData: VersionAPI | null = null;
+let cachedAt = 0;
+
 export const PATH = '/api/version';
 export default fastifyPlugin(
   (server, _, done) => {
@@ -38,6 +42,11 @@ export default fastifyPlugin(
       if (!config.features.versionChecking) return res.notFound();
 
       const details = getVersion();
+
+      // 6 hrs cache
+      if (cachedData && Date.now() - cachedAt < (6 * 60 * 60 * 1000)) {
+        return res.send({ data: cachedData, details, cached: true });
+      }
 
       const url = new URL(config.features.versionAPI);
       url.pathname = '/';
@@ -52,9 +61,13 @@ export default fastifyPlugin(
 
         const data: VersionAPI = await resp.json();
 
+        cachedData = data;
+        cachedAt = Date.now();
+
         return res.send({
           data,
           details,
+          cached: false,
         });
       } catch (e) {
         logger.error('failed to fetch version details').error(e as Error);
