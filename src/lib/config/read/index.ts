@@ -37,7 +37,7 @@ export const rawConfig: any = {
     defaultDateFormat: undefined,
     removeGpsMetadata: undefined,
     randomWordsNumAdjectives: undefined,
-    randomWordsSeperator: undefined,
+    randomWordsSeparator: undefined,
   },
   urls: {
     route: undefined,

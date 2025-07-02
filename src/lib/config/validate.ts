@@ -96,7 +96,7 @@ export const schema = z.object({
     defaultDateFormat: z.string().default('YYYY-MM-DD_HH:mm:ss'),
     removeGpsMetadata: z.boolean().default(false),
     randomWordsNumAdjectives: z.number().default(3),
-    randomWordsSeperator: z.string().default('-'),
+    randomWordsSeparator: z.string().default('-'),
   }),
   urls: z.object({
     route: z.string().startsWith('/').min(1).trim().toLowerCase().default('/go'),

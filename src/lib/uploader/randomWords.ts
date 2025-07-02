@@ -28,13 +28,13 @@ function importWords(): {
   }
 }
 
-export function randomWords(numAdjectives: number = 2, seperator: string = '-') {
+export function randomWords(numAdjectives: number = 2, separator: string = '-') {
   const { adjectives, animals } = importWords();
 
   let words = '';
 
   for (let i = 0; i !== numAdjectives; ++i) {
-    words += adjectives[randomIndex(adjectives.length)] + seperator;
+    words += adjectives[randomIndex(adjectives.length)] + separator;
   }
 
   words += animals[randomIndex(animals.length)];

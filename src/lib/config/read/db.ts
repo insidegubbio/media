@@ -27,7 +27,7 @@ export const DATABASE_TO_PROP = {
   filesDefaultDateFormat: 'files.defaultDateFormat',
   filesRemoveGpsMetadata: 'files.removeGpsMetadata',
   filesRandomWordsNumAdjectives: 'files.randomWordsNumAdjectives',
-  filesRandomWordsSeparator: 'files.randomWordsSeperator',
+  filesRandomWordsSeparator: 'files.randomWordsSeparator',
 
   urlsRoute: 'urls.route',
   urlsLength: 'urls.length',
