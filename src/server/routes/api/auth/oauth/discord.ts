@@ -80,10 +80,12 @@ async function discordOauth({ code, host, state }: OAuthQuery, logger: Logger): 
 
   logger.debug('user', { '@me': userJson });
 
-  if (config.oauth.discord.allowedIds && !config.oauth.discord.allowedIds.includes(userJson.id)) {
+  const allowedIds = config.oauth.discord.allowedIds;
+  const deniedIds = config.oauth.discord.deniedIds;
+  if (deniedIds && deniedIds.length > 0 && deniedIds.includes(userJson.id)) {
     return { error: 'You are not allowed to log in with Discord.' };
   }
-  if (config.oauth.discord.deniedIds && config.oauth.discord.deniedIds.includes(userJson.id)) {
+  if (allowedIds && allowedIds.length > 0 && !allowedIds.includes(userJson.id)) {
     return { error: 'You are not allowed to log in with Discord.' };
   }
 
