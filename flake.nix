@@ -29,7 +29,7 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          name = "zipline-dev";
+          name = "zipline";
 
           buildInputs = [
             nodejs
