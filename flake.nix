@@ -1,84 +1,114 @@
 {
-  description = "dev env for zipline";
-
   inputs = {
+    # required for some reason when entering the shell for devenv
+    devenv-root = {
+      url = "file+file:///dev/null";
+      flake = false;
+    };
+
     # node 24.4.1, postgres 17
     nixpkgs.url = "github:nixos/nixpkgs/b527e89270879aaaf584c41f26b2796be634bc9d";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
+    devenv.url = "github:cachix/devenv";
+    devenv.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  nixConfig = {
+    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
+    extra-substituters = "https://devenv.cachix.org";
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
+    inputs@{ flake-parts, devenv-root, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.devenv.flakeModule
+      ];
+
+      systems = [
+        "x86_64-linux"
+        "x86_64-darwin"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+
+      perSystem =
+        {
+          config,
+          self',
+          inputs',
+          pkgs,
+          system,
+          ...
+        }:
+        let
+          psqlConfig = {
+            username = "postgres";
+            password = "postgres";
+            database = "zipline";
+          };
+        in
+        {
+          devenv.shells.default = {
+            packages = with pkgs; [
+              git
+
+              # to generate thumbnails
+              ffmpeg
+
+              # for testing docker
+              colima
+              docker
+              docker-compose
+            ];
+
+            scripts = {
+              pgup.exec = ''
+                process-compose -D
+              '';
+
+              pgdown.exec = ''
+                process-compose down
+              '';
+
+              # ensure that volumes are mounted with write access for docker containers
+              start_colima.exec = ''
+                colima start --mount $PWD/themes:w --mount $PWD/uploads:w --mount $PWD/public:w
+              '';
+            };
+
+            enterShell = ''
+              export name="zipline-env";
+              echo -e "\n[$name]: run 'pgup' to start services, 'pgdown' to stop services";
+            '';
+
+            languages.javascript = {
+              enable = true;
+              package = pkgs.nodejs_24;
+
+              corepack.enable = true;
+            };
+
+            services.postgres = {
+              enable = true;
+              package = pkgs.postgresql_17;
+
+              initialScript = ''
+                CREATE ROLE "${psqlConfig.username}" WITH LOGIN PASSWORD '${psqlConfig.password}' SUPERUSER;
+              '';
+
+              initialDatabases = [
+                {
+                  name = psqlConfig.database;
+                  user = psqlConfig.username;
+                }
+              ];
+
+              listen_addresses = "0.0.0.0";
+              port = 5432;
+            };
+          };
         };
-
-        nodejs = pkgs.nodejs_24;
-        postgres = pkgs.postgresql;
-        psqlDir = ".psql_db/data";
-
-        psqlUsername = "postgres";
-        psqlPassword = "postgres";
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          name = "zipline";
-
-          buildInputs = [
-            nodejs
-            postgres
-
-            pkgs.git
-            pkgs.corepack
-            pkgs.ffmpeg
-          ];
-
-          shellHook = ''
-            export PGDATA="$PWD/${psqlDir}"
-            export PGUSER="${psqlUsername}"
-            export PGPASSWORD="${psqlPassword}"
-            export PGPORT=5432
-
-            if [ ! -d "$PGDATA" ]; then
-              echo "Initializing PostgreSQL data directory at $PGDATA"
-              initdb -D "$PGDATA" --username="$PGUSER" --pwfile=<(echo "$PGPASSWORD")
-            fi
-
-            # listen on localhost
-            echo "host all all 127.0.0.1/32 password" >> "$PGDATA/pg_hba.conf"
-            echo "host all all ::1/128 password" >> "$PGDATA/pg_hba.conf"
-            sed -i "s/^#\?listen_addresses.*/listen_addresses = 'localhost'/" "$PGDATA/postgresql.conf"
-
-            echo "Starting PostgreSQL..."
-            pg_ctl -D "$PGDATA" -o "-p $PGPORT" -w start
-
-            echo -e "PostgreSQL is ready at postgresql://$PGUSER:$PGPASSWORD@localhost:$PGPORT/postgres\n\n"
-
-            stop_postgres() {
-              echo "Stopping PostgreSQL..."
-              pg_ctl -D "$PGDATA" stop
-            }
-
-            # trap pg to stop on exiting the dev shell
-            trap stop_postgres EXIT
-
-            # use zsh if zsh is available
-            if command -v zsh >/dev/null 2>&1; then
-              zsh
-            else
-              $SHELL
-            fi
-
-            exit
-          '';
-        };
-      }
-    );
+    };
 }

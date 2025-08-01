@@ -200,21 +200,29 @@ Here's how to setup Zipline for development
 
 #### Nix
 
-If you have [Nix](https://nixos.org/) installed, you can use the provided dev shell to get started quickly. Just run:
+If you have [direnv](https://direnv.net/) installed, you can simply cd into the cloned directory and run the following command:
 
 ```bash
-nix develop
+direnv allow
 ```
 
-This will start a postgres server, and drop you into a shell with the necessary tools installed:
+Granted that you have direnv setup properly, you will now be in a new nix shell with all the dependencies and PostgreSQL installed.
 
-- nodejs
-- corepack
-- git
-- ffmpeg
-- postgres server
+If you aren't using direnv, you can run the following command to enter the nix shell:
 
-After hopping into the dev shell, you can follow the instructions below (skipping the prerequisites) to setup a configuration and start the server.
+```bash
+nix develop --no-pure-eval
+```
+
+Useful commands regarding the postgres server:
+
+| Command         | Description                                         |
+| --------------- | --------------------------------------------------- |
+| `pgup`          | Starts the postgres server in the background.       |
+| `pgdown`        | Stops the postgres server running in the background |
+| `pg_ctl status` | See if the postgres server is running               |
+
+After familiarizing yourself with the environment, you can continue below (skipping the prerequisites since they are already installed).
 
 #### Prerequisites
 

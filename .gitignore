@@ -43,11 +43,13 @@ next-env.d.ts
 # eslint
 .eslintcache
 
+# nix dev env
+!.envrc
+.direnv
+.devenv
+
 # zipline
 uploads*/
 *.crt
 *.key
 generated
-
-# nix dev env
-/.psql_db/
