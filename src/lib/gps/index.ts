@@ -1,5 +1,6 @@
 // heavily modified from @xoi/gps-metadata-remover to fit the needs of zipline
 
+import { readFileSync } from 'fs';
 import {
   PNG_TAG,
   PNG_IEND,
@@ -76,7 +77,15 @@ function stripGpsFromExif(buffer: Buffer, offset: number): boolean {
   return false;
 }
 
-export function removeGps(buffer: Buffer): boolean {
+export function removeGps(input: Buffer | string): boolean {
+  let buffer: Buffer;
+
+  if (typeof input === 'string') {
+    buffer = readFileSync(input);
+  } else {
+    buffer = input;
+  }
+
   const signature = buffer.readUInt32BE(0);
   let offset = 0;
   let removed = false;

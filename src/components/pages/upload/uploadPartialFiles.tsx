@@ -162,7 +162,7 @@ export async function uploadPartialFiles(
       req.addEventListener(
         'load',
         () => {
-          const res: Response['/api/upload'] = JSON.parse(req.responseText);
+          const res: Response['/api/upload/partial'] = JSON.parse(req.responseText);
 
           if ((res as ErrorBody).error) {
             notifications.update({
@@ -242,7 +242,7 @@ export async function uploadPartialFiles(
         false,
       );
 
-      req.open('POST', '/api/upload');
+      req.open('POST', '/api/upload/partial');
       options.deletesAt !== 'default' && req.setRequestHeader('x-zipline-deletes-at', options.deletesAt);
       options.format !== 'default' && req.setRequestHeader('x-zipline-format', options.format);
       options.imageCompressionPercent &&

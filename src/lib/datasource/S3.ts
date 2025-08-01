@@ -14,6 +14,7 @@ import { ReadableStream } from 'stream/web';
 import Logger, { log } from '../logger';
 import { randomCharacters } from '../random';
 import { Datasource } from './Datasource';
+import { createReadStream } from 'fs';
 
 function isOk(code: number) {
   return code >= 200 && code < 300;
@@ -160,17 +161,29 @@ export class S3Datasource extends Datasource {
 
   public async put(
     file: string,
-    data: Buffer,
+    data: Buffer | string,
     options: {
       mimetype?: string;
     } = {},
   ): Promise<void> {
-    const command = new PutObjectCommand({
+    let command = new PutObjectCommand({
       Bucket: this.options.bucket,
       Key: this.key(file),
       Body: data,
       ...(options.mimetype ? { ContentType: options.mimetype } : {}),
     });
+
+    if (typeof data === 'string') {
+      const readStream = createReadStream(data);
+      command = new PutObjectCommand({
+        Bucket: this.options.bucket,
+        Key: this.key(file),
+        Body: readStream,
+        ...(options.mimetype ? { ContentType: options.mimetype } : {}),
+      });
+
+      this.logger.debug('putting object from stream', { file, key: this.key(file) });
+    }
 
     try {
       const res = await this.client.send(command);

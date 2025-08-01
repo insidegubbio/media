@@ -1,8 +1,17 @@
 import { createReadStream, existsSync } from 'fs';
-import { readdir, rm, stat, writeFile } from 'fs/promises';
+import { access, constants, readdir, rename, rm, stat, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable } from 'stream';
 import { Datasource } from './Datasource';
+
+async function existsAndCanRW(path: string): Promise<boolean> {
+  try {
+    await access(path, constants.R_OK | constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export class LocalDatasource extends Datasource {
   name = 'local';
@@ -20,8 +29,22 @@ export class LocalDatasource extends Datasource {
     return readStream;
   }
 
-  public async put(file: string, data: Buffer): Promise<void> {
-    return writeFile(join(this.dir, file), data);
+  public async put(file: string, data: Buffer | string): Promise<void> {
+    const path = join(this.dir, file);
+
+    // handles if given a path to a file, it will just move it instead of doing unecessary writes
+    if (typeof data === 'string') {
+      const exists = await existsAndCanRW(data);
+      if (!exists)
+        throw new Error(
+          "Something went very wrong! the temporary directory wasn't readable or the file doesn't exist.",
+        );
+
+      console.log(`Moving file from ${data} to ${path}`);
+      return rename(data, path);
+    }
+
+    return writeFile(path, data);
   }
 
   public async delete(file: string): Promise<void> {

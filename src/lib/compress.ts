@@ -1,7 +1,11 @@
 import sharp from 'sharp';
 
-export function compress(buffer: Buffer, qualty: number) {
-  return sharp(buffer).withMetadata().jpeg({ quality: qualty }).toBuffer();
+export function compressFile(filePath: string, quality: number) {
+  const buffer = sharp(filePath).withMetadata().jpeg({ quality: quality }).toBuffer();
+
+  return buffer.then((data) => {
+    return sharp(data).toFile(filePath);
+  });
 }
 
 export function replaceFileNameJpg(original: string, when?: boolean) {

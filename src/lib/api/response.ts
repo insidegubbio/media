@@ -15,6 +15,7 @@ import { ApiServerThumbnailsResponse } from '@/server/routes/api/server/thumbnai
 import { ApiSetupResponse } from '@/server/routes/api/setup';
 import { ApiStatsResponse } from '@/server/routes/api/stats';
 import { ApiUploadResponse } from '@/server/routes/api/upload';
+import { ApiUploadPartialResponse } from '@/server/routes/api/upload/partial';
 import { ApiUserResponse } from '@/server/routes/api/user';
 import { ApiUserExportResponse } from '@/server/routes/api/user/export';
 import { ApiUserFilesResponse } from '@/server/routes/api/user/files';
@@ -76,6 +77,7 @@ export type Response = {
   '/api/healthcheck': ApiHealthcheckResponse;
   '/api/setup': ApiSetupResponse;
   '/api/upload': ApiUploadResponse;
+  '/api/upload/partial': ApiUploadPartialResponse;
   '/api/version': ApiVersionResponse;
   '/api/stats': ApiStatsResponse;
 };
