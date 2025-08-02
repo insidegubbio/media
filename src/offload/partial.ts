@@ -1,5 +1,5 @@
 import { bytes } from '@/lib/bytes';
-import { reloadSettings } from '@/lib/config';
+import { Config } from '@/lib/config/validate';
 import { getDatasource } from '@/lib/datasource';
 import { S3Datasource } from '@/lib/datasource/S3';
 import { File, fileSelect } from '@/lib/db/models/file';
@@ -15,7 +15,6 @@ import { open, readdir, rm } from 'fs/promises';
 import { join } from 'path';
 import { isMainThread, workerData } from 'worker_threads';
 import { dbProxy } from './proxiedDb';
-import { Config } from '@/lib/config/validate';
 
 export type PartialWorkerData = {
   user: {
@@ -29,9 +28,10 @@ export type PartialWorkerData = {
   options: UploadOptions;
   domain: string;
   responseUrl: string;
+  config: Config;
 };
 
-const { user, file, options, responseUrl, domain } = workerData as PartialWorkerData;
+const { user, file, options, responseUrl, domain, config } = workerData as PartialWorkerData;
 const logger = log('tasks').c('partial').c(file.filename);
 
 if (isMainThread) {
@@ -54,9 +54,8 @@ let finalPath: string | undefined;
 main();
 
 async function main() {
-  await reloadSettings();
+  global.__config__ = config;
 
-  const config = global.__config__;
   getDatasource(config);
 
   if (!config.chunks.enabled) {
@@ -214,7 +213,7 @@ async function runComplete(id: string) {
     partial: true,
   });
 
-  await onUpload({
+  await onUpload(config, {
     user: userr,
     file: fileUpload,
     link: {

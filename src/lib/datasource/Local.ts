@@ -2,7 +2,7 @@ import { createReadStream, existsSync } from 'fs';
 import { access, constants, readdir, rename, rm, stat, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable } from 'stream';
-import { Datasource, DatasourceQueryOperation } from './Datasource';
+import { Datasource } from './Datasource';
 
 async function existsAndCanRW(path: string): Promise<boolean> {
   try {
@@ -96,14 +96,5 @@ export class LocalDatasource extends Datasource {
       throw new Error(`Something went very wrong! File ${from} does not exist in local datasource.`);
 
     return rename(fromPath, toPath);
-  }
-
-  public async query(operation: DatasourceQueryOperation): Promise<string[]> {
-    if (operation.type !== 'startsWith') {
-      throw new Error(`Unsupported query operation type: ${operation.type}`);
-    }
-
-    const files = await readdir(this.dir);
-    return files.filter((file) => file.startsWith(operation.query));
   }
 }

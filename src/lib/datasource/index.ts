@@ -1,4 +1,5 @@
-import { config } from '../config';
+import { isMainThread } from 'worker_threads';
+import { Config } from '../config/validate';
 import { log } from '../logger';
 import { Datasource } from './Datasource';
 import { LocalDatasource } from './Local';
@@ -10,8 +11,8 @@ declare global {
   var __datasource__: Datasource;
 }
 
-function getDatasource(conf?: typeof config): void {
-  if (!conf) return;
+function getDatasource(config?: Config): void {
+  if (!config) return;
 
   const logger = log('datasource');
 
@@ -38,8 +39,16 @@ function getDatasource(conf?: typeof config): void {
 
 datasource = global.__datasource__;
 
-if (!global.__datasource__ && !datasource) {
-  getDatasource(config);
+// Don't instantiate datasource if we are not in the main thread since they handle their own initialization
+if (!global.__datasource__ && !datasource && isMainThread) {
+  import('../config/index.js')
+    .then(({ config }) => {
+      getDatasource(config);
+    })
+    .catch((error) => {
+      console.error('Failed to initialize datasource:', error);
+      process.exit(1);
+    });
 }
 
 export { datasource, getDatasource };

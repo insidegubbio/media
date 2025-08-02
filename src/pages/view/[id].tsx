@@ -274,7 +274,11 @@ export default function ViewFileId({
                 {file.name}{' '}
               </Text>
               {user?.view!.showTags && (
-                <Group gap={4}>{file.tags?.map((tag) => <TagPill key={tag.id} tag={tag} />)}</Group>
+                <Group gap={4}>
+                  {file.tags?.map((tag) => (
+                    <TagPill key={tag.id} tag={tag} />
+                  ))}
+                </Group>
               )}
               {user?.view!.showFolder &&
                 file.Folder &&

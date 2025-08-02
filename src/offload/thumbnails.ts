@@ -1,12 +1,11 @@
 import { bytes } from '@/lib/bytes';
-import { reloadSettings } from '@/lib/config';
 import { Config } from '@/lib/config/validate';
 import { getDatasource } from '@/lib/datasource';
 import { Datasource } from '@/lib/datasource/Datasource';
-import { File } from '@/lib/db/models/file';
+import type { File } from '@/lib/db/models/file';
 import { log } from '@/lib/logger';
 import ffmpeg from 'fluent-ffmpeg';
-import { createWriteStream, readFileSync, unlinkSync } from 'fs';
+import { createWriteStream, existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { isMainThread, parentPort, workerData } from 'worker_threads';
 import { dbProxy, pending } from './proxiedDb';
@@ -14,11 +13,12 @@ import { dbProxy, pending } from './proxiedDb';
 export type ThumbnailWorkerData = {
   id: string;
   enabled: boolean;
+  config: Config;
 };
 
 type ThumbnailId = File['thumbnail'] & { id: string };
 
-const { id, enabled } = workerData as ThumbnailWorkerData;
+const { id, enabled, config } = workerData as ThumbnailWorkerData;
 
 const logger = log('tasks').c(id);
 
@@ -60,6 +60,12 @@ function genThumbnail(file: string, thumbnailTmp: string): Promise<Buffer | unde
         reject(err);
       })
       .on('end', () => {
+        if (!existsSync(thumbnailTmp)) {
+          logger.error('expected thumbnail file does not exist', { thumbnailTmp });
+          unlinkSync(file);
+          return resolve(undefined);
+        }
+
         const buffer = readFileSync(thumbnailTmp);
 
         unlinkSync(thumbnailTmp);
@@ -144,9 +150,6 @@ async function generate(config: Config, datasource: Datasource, ids: string[]) {
 }
 
 async function main() {
-  await reloadSettings();
-
-  const config = global.__config__;
   getDatasource(config);
 
   const datasource = global.__datasource__;

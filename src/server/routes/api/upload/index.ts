@@ -1,4 +1,4 @@
-import { Prisma } from '@/client';
+import { Prisma } from '../../../../../generated/client';
 import { bytes } from '@/lib/bytes';
 import { compressFile } from '@/lib/compress';
 import { config } from '@/lib/config';
@@ -219,7 +219,7 @@ export default fastifyPlugin(
           { size: bytes(fileUpload.size), ip: req.ip },
         );
 
-        await onUpload({
+        await onUpload(config, {
           user: req.user ?? {
             id: 'anonymous',
             username: 'anonymous',

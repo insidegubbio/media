@@ -128,7 +128,7 @@ export default fastifyPlugin(
           user: req.user.id,
         });
 
-        onShorten({
+        onShorten(config, {
           user: req.user,
           url,
           link: {

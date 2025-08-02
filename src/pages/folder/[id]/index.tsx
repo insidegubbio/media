@@ -42,7 +42,9 @@ export default function ViewFolderId({
           }}
           spacing='md'
         >
-          {folder.files?.map((file) => <DashboardFile key={file.id} file={file} reduce />)}
+          {folder.files?.map((file) => (
+            <DashboardFile key={file.id} file={file} reduce />
+          ))}
         </SimpleGrid>
       </Container>
     </>

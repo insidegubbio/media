@@ -1,10 +1,10 @@
-import { config } from '../config';
+import { Config } from '../config/validate';
 import { log } from '../logger';
 import { onUpload as discordOnUpload, onShorten as discordOnShorten } from './discord';
 
 const logger = log('webhooks').c('http');
 
-export async function onUpload({ user, file, link }: Parameters<typeof discordOnUpload>[0]) {
+export async function onUpload(config: Config, { user, file, link }: Parameters<typeof discordOnUpload>[1]) {
   if (!config.httpWebhook.onUpload) return;
   if (!URL.canParse(config.httpWebhook.onUpload)) {
     logger.debug('invalid url for http onUpload');
@@ -51,7 +51,7 @@ export async function onUpload({ user, file, link }: Parameters<typeof discordOn
   return;
 }
 
-export async function onShorten({ user, url, link }: Parameters<typeof discordOnShorten>[0]) {
+export async function onShorten(config: Config, { user, url, link }: Parameters<typeof discordOnShorten>[1]) {
   if (!config.httpWebhook.onShorten) return;
   if (!URL.canParse(config.httpWebhook.onShorten)) {
     logger.debug('invalid url for http onShorten');

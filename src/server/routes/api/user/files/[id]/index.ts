@@ -1,4 +1,4 @@
-import { Prisma } from '@/client';
+import { Prisma } from '../../../../../../../generated/client';
 import { bytes } from '@/lib/bytes';
 import { hashPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';

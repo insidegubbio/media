@@ -1,5 +1,6 @@
 import { Worker } from 'worker_threads';
 import Logger, { log } from '../logger';
+import { config } from '../config';
 
 export interface Task {
   id: string;
@@ -94,6 +95,10 @@ export class Tasks {
 
   private startWorker(task: WorkerTask) {
     task.started = true;
+
+    if (task.data) {
+      task.data.config = config;
+    }
 
     const worker = new Worker(task.path, {
       workerData: task.data,

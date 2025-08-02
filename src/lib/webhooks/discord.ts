@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { discordContent } from '../config/validate';
+import { Config, discordContent } from '../config/validate';
 import { ParseValue, parseString } from '../parser';
-import { config } from '../config';
 import { File } from '../db/models/file';
 import { User } from '../db/models/user';
 import { log } from '../logger';
@@ -46,6 +45,7 @@ export function hexString(value?: string | null): number | null {
 }
 
 export function parseContent(
+  config: Config,
   content: DiscordContent | null,
   value: ParseValue,
 ): (DiscordContent & { raw: string }) | null {
@@ -111,7 +111,10 @@ export function buildResponse(
   };
 }
 
-export async function onUpload({ user, file, link }: { user: User; file: File; link: ParseValue['link'] }) {
+export async function onUpload(
+  config: Config,
+  { user, file, link }: { user: User; file: File; link: ParseValue['link'] },
+) {
   if (!config.discord?.onUpload) return logger.debug('no onUpload config, no webhook executed');
 
   const webhookUrl = config.discord?.onUpload?.webhookUrl || config.discord?.webhookUrl;
@@ -119,7 +122,7 @@ export async function onUpload({ user, file, link }: { user: User; file: File; l
 
   const metrics = await parserMetrics(user.id);
 
-  const content = parseContent(config.discord?.onUpload, { user, file, link, ...metrics });
+  const content = parseContent(config, config.discord?.onUpload, { user, file, link, ...metrics });
   if (!content) return logger.debug('no content somehow, no webhook executed');
 
   const response = buildResponse(content, file);
@@ -142,15 +145,18 @@ export async function onUpload({ user, file, link }: { user: User; file: File; l
   return;
 }
 
-export async function onShorten({
-  user,
-  url,
-  link,
-}: {
-  user: User;
-  url: Partial<Url>;
-  link: ParseValue['link'];
-}) {
+export async function onShorten(
+  config: Config,
+  {
+    user,
+    url,
+    link,
+  }: {
+    user: User;
+    url: Partial<Url>;
+    link: ParseValue['link'];
+  },
+) {
   if (!config.discord?.onShorten) return logger.debug('no onShorten config, no webhook executed');
 
   const webhookUrl = config.discord?.onShorten?.webhookUrl || config.discord?.webhookUrl;
@@ -158,7 +164,7 @@ export async function onShorten({
 
   const metrics = await parserMetrics(user.id);
 
-  const content = parseContent(config.discord?.onShorten, { user, url, link, ...metrics });
+  const content = parseContent(config, config.discord?.onShorten, { user, url, link, ...metrics });
   if (!content) return logger.debug('no content somehow, no webhook executed');
 
   const response = buildResponse(content, undefined, url);

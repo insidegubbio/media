@@ -13,7 +13,7 @@ import { readdir, rename, rm } from 'fs/promises';
 import { join } from 'path';
 import { Worker } from 'worker_threads';
 import { ApiUploadResponse, getExtension } from '.';
-import { Prisma } from '@/client';
+import { Prisma } from '../../../../../generated/client';
 
 const logger = log('api').c('upload').c('partial');
 
@@ -220,6 +220,7 @@ export default fastifyPlugin(
             options,
             domain,
             responseUrl,
+            config,
           },
         });
 

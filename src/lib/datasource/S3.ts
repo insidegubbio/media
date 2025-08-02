@@ -15,7 +15,7 @@ import { Readable } from 'stream';
 import { ReadableStream } from 'stream/web';
 import Logger, { log } from '../logger';
 import { randomCharacters } from '../random';
-import { Datasource, DatasourceQueryOperation } from './Datasource';
+import { Datasource } from './Datasource';
 
 function isOk(code: number) {
   return code >= 200 && code < 300;
@@ -359,36 +359,6 @@ export class S3Datasource extends Datasource {
       this.logger.error('error metadata', e as Record<string, unknown>);
 
       throw new Error('Failed to rename object');
-    }
-  }
-
-  public async query(operation: DatasourceQueryOperation): Promise<string[]> {
-    if (operation.type !== 'startsWith') {
-      throw new Error(`Unsupported query operation type: ${operation.type}`);
-    }
-
-    const command = new ListObjectsCommand({
-      Bucket: this.options.bucket,
-      Prefix: this.key(operation.query),
-      Delimiter: this.options.subdirectory ? undefined : '/',
-    });
-
-    try {
-      const res = await this.client.send(command);
-
-      if (!isOk(res.$metadata.httpStatusCode || 0)) {
-        this.logger.error('there was an error while listing objects');
-        this.logger.error('error metadata', res.$metadata as Record<string, unknown>);
-
-        return [];
-      }
-
-      return res.Contents?.map((obj) => obj.Key!.replace(this.key(''), '')) || [];
-    } catch (e) {
-      this.logger.error('there was an error while listing objects');
-      this.logger.error('error metadata', e as Record<string, unknown>);
-
-      return [];
     }
   }
 }
