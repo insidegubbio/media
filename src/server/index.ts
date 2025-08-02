@@ -219,11 +219,14 @@ async function main() {
   // Tasks
   tasks.interval('deletefiles', ms(config.tasks.deleteInterval as StringValue), deleteFiles(prisma));
   tasks.interval('maxviews', ms(config.tasks.maxViewsInterval as StringValue), maxViews(prisma));
+  tasks.interval('clearinvites', ms(config.tasks.clearInvitesInterval as StringValue), clearInvites(prisma));
 
   if (config.features.metrics)
     tasks.interval('metrics', ms(config.tasks.metricsInterval as StringValue), metrics(prisma));
 
   if (config.features.thumbnails.enabled) {
+    tasks.interval('thumbnails', ms(config.tasks.thumbnailsInterval as StringValue), thumbnails(prisma));
+
     for (let i = 0; i !== config.features.thumbnails.num_threads; ++i) {
       tasks.worker(
         `thumbnail-${i}`,
@@ -263,13 +266,6 @@ async function main() {
         },
       );
     }
-
-    tasks.interval('thumbnails', ms(config.tasks.thumbnailsInterval as StringValue), thumbnails(prisma));
-    tasks.interval(
-      'clearinvites',
-      ms(config.tasks.clearInvitesInterval as StringValue),
-      clearInvites(prisma),
-    );
   }
 
   tasks.start();

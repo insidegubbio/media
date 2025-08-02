@@ -2,7 +2,7 @@ import { createReadStream, existsSync } from 'fs';
 import { access, constants, readdir, rename, rm, stat, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable } from 'stream';
-import { Datasource } from './Datasource';
+import { Datasource, DatasourceQueryOperation } from './Datasource';
 
 async function existsAndCanRW(path: string): Promise<boolean> {
   try {
@@ -40,14 +40,19 @@ export class LocalDatasource extends Datasource {
           "Something went very wrong! the temporary directory wasn't readable or the file doesn't exist.",
         );
 
-      console.log(`Moving file from ${data} to ${path}`);
       return rename(data, path);
     }
 
     return writeFile(path, data);
   }
 
-  public async delete(file: string): Promise<void> {
+  public async delete(file: string | string[]): Promise<void> {
+    if (Array.isArray(file)) {
+      await Promise.all(file.map((f) => this.delete(f)));
+
+      return;
+    }
+
     const path = join(this.dir, file);
     if (!existsSync(path)) return Promise.resolve();
 
@@ -91,5 +96,14 @@ export class LocalDatasource extends Datasource {
       throw new Error(`Something went very wrong! File ${from} does not exist in local datasource.`);
 
     return rename(fromPath, toPath);
+  }
+
+  public async query(operation: DatasourceQueryOperation): Promise<string[]> {
+    if (operation.type !== 'startsWith') {
+      throw new Error(`Unsupported query operation type: ${operation.type}`);
+    }
+
+    const files = await readdir(this.dir);
+    return files.filter((file) => file.startsWith(operation.query));
   }
 }

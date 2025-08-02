@@ -1,6 +1,6 @@
+import { bytes } from '@/lib/bytes';
 import { datasource } from '@/lib/datasource';
 import { IntervalTask } from '..';
-import { bytes } from '@/lib/bytes';
 
 export default function deleteFiles(prisma: typeof globalThis.__db__) {
   return async function (this: IntervalTask) {
