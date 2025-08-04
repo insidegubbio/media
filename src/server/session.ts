@@ -58,17 +58,17 @@ export async function saveSession(
 ) {
   session.id = user.id;
 
-  const sessionId = randomCharacters(32);
-  session.sessionId = sessionId;
+  if (overwriteSessions || !session.sessionId) {
+    const sessionId = randomCharacters(32);
+    session.sessionId = sessionId;
 
-  await prisma.user.update({
-    where: {
-      id: user.id,
-    },
-    data: {
-      sessions: overwriteSessions ? { set: [sessionId] } : { push: sessionId },
-    },
-  });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        sessions: overwriteSessions ? { set: [sessionId] } : { push: sessionId },
+      },
+    });
+  }
 
   await session.save();
 }
