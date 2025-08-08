@@ -39,12 +39,15 @@ export default fastifyPlugin(
               id: {
                 in: files,
               },
+              userId: req.user.id,
             },
 
             data: {
               favorite: favorite,
             },
           });
+
+          if (resp.count === 0) return res.badRequest('No files were updated.');
 
           logger.info(`${req.user.username} ${favorite ? 'favorited' : 'unfavorited'} ${resp.count} files`, {
             user: req.user.id,
@@ -68,12 +71,15 @@ export default fastifyPlugin(
             id: {
               in: files,
             },
+            userId: req.user.id,
           },
 
           data: {
             folderId: folder,
           },
         });
+
+        if (resp.count === 0) return res.notFound('No files were moved.');
 
         logger.info(`${req.user.username} moved ${resp.count} files to ${f.name}`, {
           user: req.user.id,
@@ -108,6 +114,7 @@ export default fastifyPlugin(
               id: {
                 in: files,
               },
+              userId: req.user.id,
             },
           });
 
@@ -125,8 +132,11 @@ export default fastifyPlugin(
             id: {
               in: files,
             },
+            userId: req.user.id,
           },
         });
+
+        if (resp.count === 0) return res.badRequest('No files were deleted.');
 
         logger.info(`${req.user.username} deleted ${resp.count} files`, {
           user: req.user.id,
