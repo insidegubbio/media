@@ -33,25 +33,15 @@ export class LocalDatasource extends Datasource {
     const path = join(this.dir, file);
 
     // handles if given a path to a file, it will just move it instead of doing unecessary writes
-    if (typeof data === 'string') {
+    if (typeof data === 'string' && data.startsWith('/')) {
       const exists = await existsAndCanRW(data);
       if (!exists)
         throw new Error(
           "Something went very wrong! the temporary directory wasn't readable or the file doesn't exist.",
         );
 
-      try {
-        await rename(data, path);
-      } catch (err) {
-        // docker may throw exdev errors when renaming across volumes (/tmp to something else)
-        if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
-          await copyFile(data, path);
-          await rm(data);
-          return;
-        } else {
-          throw err;
-        }
-      }
+      await copyFile(data, path);
+      await rm(data);
     }
 
     return writeFile(path, data);
