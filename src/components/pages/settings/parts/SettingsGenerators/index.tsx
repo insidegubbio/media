@@ -53,7 +53,7 @@ export default function SettingsGenerators() {
               width={24}
               height={24}
               alt='ishare logo'
-              src='https://isharemac.app/ishare/Util/Assets.xcassets/AppIcon.appiconset/AppIcon-128.png'
+              src='https://raw.githubusercontent.com/itoolio/ishare/refs/tags/v4.2.5/ishare/Util/Assets.xcassets/AppIcon.appiconset/AppIcon-128.png'
             />
           }
           desc={
