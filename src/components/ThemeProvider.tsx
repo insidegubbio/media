@@ -65,17 +65,21 @@ export default function ThemeProvider({
   }
 
   return (
-    <ThemeContext.Provider value={{ themes: themes ?? [] }}>
-      <MantineProvider
-        defaultColorScheme={theme.colorScheme as unknown as any}
-        forceColorScheme={theme.colorScheme as unknown as any}
-        theme={createTheme({
-          ...themeComponents(theme),
-          defaultRadius: 'md',
-        })}
-      >
-        {children}
-      </MantineProvider>
-    </ThemeContext.Provider>
+    <>
+      {theme?.extraCss && <style>{theme.extraCss}</style>}
+
+      <ThemeContext.Provider value={{ themes: themes ?? [] }}>
+        <MantineProvider
+          defaultColorScheme={theme.colorScheme as unknown as any}
+          forceColorScheme={theme.colorScheme as unknown as any}
+          theme={createTheme({
+            ...themeComponents(theme),
+            defaultRadius: 'md',
+          })}
+        >
+          {children}
+        </MantineProvider>
+      </ThemeContext.Provider>
+    </>
   );
 }

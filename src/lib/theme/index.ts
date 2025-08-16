@@ -16,6 +16,7 @@ export type ZiplineTheme = MantineTheme & {
   name: string;
   colorScheme: string;
   mainBackgroundColor: string;
+  extraCss?: string;
 };
 
 export function findTheme(id: string, themes: ZiplineTheme[] = []): ZiplineTheme | undefined {
