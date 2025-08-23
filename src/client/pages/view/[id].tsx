@@ -44,6 +44,13 @@ export default function ViewFileId() {
 
   const { file, password, code, user, host, metrics, filesRoute, pw } = data;
 
+  // Fix dates that were stringified during SSR
+  if (file?.createdAt) (file as any).createdAt = new Date(file.createdAt);
+  if (file?.updatedAt) (file as any).updatedAt = new Date(file.updatedAt);
+  if (file?.deletesAt) (file as any).deletesAt = new Date(file.deletesAt);
+  if (user?.createdAt) (user as any).createdAt = new Date(user.createdAt);
+  if (user?.updatedAt) (user as any).updatedAt = new Date(user.updatedAt);
+
   const [passwordValue, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);

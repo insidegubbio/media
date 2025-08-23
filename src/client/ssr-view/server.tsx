@@ -88,13 +88,6 @@ export async function render(
     host = proto === 'https' || zConfig.core.returnHttpsUrls ? `https://${host}` : `http://${host}`;
   }
 
-  // Date normalization
-  (file as any).createdAt = file.createdAt.toISOString();
-  (file as any).updatedAt = file.updatedAt.toISOString();
-  (file as any).deletesAt = file.deletesAt?.toISOString() || null;
-  (user as any).createdAt = user.createdAt.toISOString();
-  (user as any).updatedAt = user.updatedAt.toISOString();
-
   const code = await isCode(file.name);
   const themes = await readThemes();
   const metrics = await parserMetrics(user.id);
