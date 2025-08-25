@@ -19,7 +19,8 @@ export default fastifyPlugin(
     server.get<{ Querystring: Query }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
       if (!config.features.metrics) return res.forbidden('metrics are disabled');
 
-      if (config.features.metrics.adminOnly && !isAdministrator(req.user.role)) return res.forbidden('admin only');
+      if (config.features.metrics.adminOnly && !isAdministrator(req.user.role))
+        return res.forbidden('admin only');
 
       const { from, to, all } = req.query;
 

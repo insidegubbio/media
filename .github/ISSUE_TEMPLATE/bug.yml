@@ -3,15 +3,6 @@ description: Report a reproducible bug in Zipline
 title: 'Bug: [short description of the issue]'
 labels: ['bug']
 body:
-  - type: checkboxes
-    id: agree
-    attributes:
-      label: Confirm bug report
-      description: Please make sure that this is a bug with Zipline and not with any external services. Dealing with reproducible bugs help us a ton when trying to fix them. Please check the following that apply to this report.
-      options:
-        - label: "✅ This bug is a Zipline bug and is reproducible"
-        - label: "❌ I am not sure if this is a Zipline bug (it may be due to a configuration, user error, or external service)"
-
   - type: textarea
     id: what-happened
     attributes:

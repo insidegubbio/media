@@ -1,5 +1,8 @@
 import { version } from '../../package.json';
 import { execSync } from 'child_process';
+import { log } from './logger';
+
+const logger = log('version');
 
 export function gitSha() {
   const envValue = process.env.ZIPLINE_GIT_SHA;
@@ -9,7 +12,10 @@ export function gitSha() {
     const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
     return commitHash;
   } catch (error) {
-    console.error('Error getting git commit hash:', error);
+    if (!(error instanceof Error)) return null;
+
+    logger.warn('failed to get commit hash: ' + error.message);
+    logger.debug('failed to get commit hash', { error: JSON.stringify(error) });
     return null;
   }
 }
