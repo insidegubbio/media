@@ -154,7 +154,6 @@ export default function Features({
               { value: 'png', label: '.png' },
               { value: 'webp', label: '.webp' },
             ]}
-            allowDeselect={false}
             {...form.getInputProps('featuresThumbnailsFormat')}
           />
 

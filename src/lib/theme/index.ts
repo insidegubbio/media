@@ -8,6 +8,7 @@ import {
   Modal,
   parseThemeColor,
   rgba,
+  Select,
   VariantColorsResolver,
 } from '@mantine/core';
 
@@ -69,6 +70,11 @@ export function themeComponents(theme: ZiplineTheme): MantineThemeOverride {
           overlayProps: {
             blur: 6,
           },
+        },
+      }),
+      Select: Select.extend({
+        defaultProps: {
+          allowDeselect: false,
         },
       }),
     },
