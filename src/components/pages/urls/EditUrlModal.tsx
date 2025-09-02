@@ -18,10 +18,10 @@ export default function EditUrlModal({
   if (!url) return null;
 
   const [maxViews, setMaxViews] = useState<number | null>(url?.maxViews ?? null);
-  const [password, setPassword] = useState<string | null>('');
   const [vanity, setVanity] = useState<string | null>(url?.vanity ?? null);
   const [destination, setDestination] = useState<string | null>(url?.destination ?? null);
   const [enabled, setEnabled] = useState<boolean>(url?.enabled ?? true);
+  const [password, setPassword] = useState<string | null>('');
 
   const handleRemovePassword = async () => {
     if (!url.password) return;

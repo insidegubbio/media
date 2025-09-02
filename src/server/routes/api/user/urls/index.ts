@@ -2,7 +2,7 @@ import { config } from '@/lib/config';
 import { hashPassword } from '@/lib/crypto';
 import { randomCharacters } from '@/lib/random';
 import { prisma } from '@/lib/db';
-import { Url } from '@/lib/db/models/url';
+import { cleanUrlPasswords, Url } from '@/lib/db/models/url';
 import { log } from '@/lib/logger';
 import { z } from 'zod';
 import { onShorten } from '@/lib/webhooks';
@@ -173,12 +173,9 @@ export default fastifyPlugin(
         where: {
           userId: req.user.id,
         },
-        omit: {
-          password: true,
-        },
       });
 
-      return res.send(urls);
+      return res.send(cleanUrlPasswords(urls));
     });
 
     done();
