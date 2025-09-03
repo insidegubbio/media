@@ -47,4 +47,4 @@ jobs:
       - name: Build
         env:
           ZIPLINE_BUILD: 'true'
-        run: pnpm build:skip
+        run: pnpm build
