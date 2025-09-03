@@ -41,8 +41,6 @@
     "@mantine/notifications": "^8.2.8",
     "@prisma/adapter-pg": "^6.15.0",
     "@prisma/client": "^6.15.0",
-    "@prisma/internals": "^6.15.0",
-    "@prisma/migrate": "^6.15.0",
     "@smithy/node-http-handler": "^4.1.1",
     "@tabler/icons-react": "^3.34.1",
     "argon2": "^0.44.0",

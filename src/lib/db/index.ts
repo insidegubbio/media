@@ -34,8 +34,6 @@ function parseDbLog(env: string): Prisma.LogLevel[] {
 function getClient() {
   const logger = log('db');
 
-  // const { PrismaClient } = require('../../prisma/client');
-
   logger.info('connecting to database ' + process.env.DATABASE_URL);
 
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });

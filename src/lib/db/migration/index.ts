@@ -1,57 +1,30 @@
-import { Migrate } from '@prisma/migrate';
 import { log } from '@/lib/logger';
-import { loadSchemaContext } from '@prisma/internals';
+import { exec } from 'child_process';
 
-// @ts-ignore
-import { ensureDatabaseExists } from '@prisma/migrate/dist/utils/ensureDatabaseExists';
-
+// TODO: don't run prisma cli
 export async function runMigrations() {
-  const schemaContext = await loadSchemaContext({
-    schemaPathFromArg: './prisma/schema.prisma',
-    printLoadMessage: false,
-  });
-
-  const migrate = await Migrate.setup({
-    schemaContext,
-    migrationsDirPath: './prisma/migrations',
-  });
-
-  const logger = log('migrations');
-  logger.debug('running migrations...');
-
   try {
-    logger.debug('ensuring database exists...');
+    await new Promise((res, rej) => {
+      const proc = exec('pnpm prisma migrate deploy');
 
-    const dbCreated = await ensureDatabaseExists(schemaContext.primaryDatasource);
-    if (dbCreated) {
-      logger.info('database created');
-    }
+      proc.stdout?.on('data', (data) => {
+        process.stdout.write(data);
+      });
+
+      proc.stderr?.on('data', (data) => {
+        process.stderr.write(data);
+      });
+
+      proc.on('close', (code) => {
+        if (code !== 0) {
+          rej(new Error('Migration process exited with code ' + code));
+        } else {
+          res(true);
+        }
+      });
+    });
   } catch (e) {
-    logger.error('failed to create database' + e);
-    logger.error('try creating the database manually and running the server again');
-
-    migrate.stop();
+    log('db').error('Error running migrations: ' + e);
     process.exit(1);
   }
-
-  let migrationIds: string[];
-  try {
-    logger.debug('applying migrations...');
-    const { appliedMigrationNames } = await migrate.applyMigrations();
-    migrationIds = appliedMigrationNames;
-  } catch (e) {
-    logger.error('failed to apply migrations' + e);
-
-    migrate.stop();
-    process.exit(1);
-  } finally {
-    migrate.stop();
-  }
-
-  if (migrationIds?.length === 0) {
-    logger.debug('no migrations applied');
-    return;
-  }
-
-  logger.info(`applied migrations: ${migrationIds.join(', ')}`);
 }
