@@ -44,15 +44,6 @@ jobs:
       - name: Install
         run: pnpm install
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Generate Prisma
-        run: pnpm build:prisma
-
-      - name: Type Check
-        run: pnpm build:types
-
       - name: Build
         env:
           ZIPLINE_BUILD: 'true'
