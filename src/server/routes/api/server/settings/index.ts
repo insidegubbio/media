@@ -189,25 +189,25 @@ export default fastifyPlugin(
             featuresMetricsShowUserSpecific: z.boolean(),
 
             featuresVersionChecking: z.boolean(),
-            featuresVersionAPI: z.string().url(),
+            featuresVersionAPI: z.url(),
 
             invitesEnabled: z.boolean(),
             invitesLength: z.number().min(1).max(64),
 
             websiteTitle: z.string(),
-            websiteTitleLogo: z.string().url().nullable(),
+            websiteTitleLogo: z.url().nullable(),
             websiteExternalLinks: z
               .union([
                 z.array(
                   z.object({
                     name: z.string(),
-                    url: z.string().url(),
+                    url: z.url(),
                   }),
                 ),
                 z.string(),
               ])
               .transform((value) => (typeof value === 'string' ? JSON.parse(value) : value)),
-            websiteLoginBackground: z.string().url().nullable(),
+            websiteLoginBackground: z.url().nullable(),
             websiteLoginBackgroundBlur: z.boolean(),
             websiteDefaultAvatar: z
               .string()
@@ -241,7 +241,7 @@ export default fastifyPlugin(
 
             oauthDiscordClientId: z.string().nullable(),
             oauthDiscordClientSecret: z.string().nullable(),
-            oauthDiscordRedirectUri: z.string().url().endsWith('/api/auth/oauth/discord').nullable(),
+            oauthDiscordRedirectUri: z.url().endsWith('/api/auth/oauth/discord').nullable(),
             oauthDiscordAllowedIds: z
               .union([
                 z.array(z.string().refine((s) => /^\d+$/.test(s), 'Discord ID must be a number')),
@@ -265,18 +265,18 @@ export default fastifyPlugin(
 
             oauthGoogleClientId: z.string().nullable(),
             oauthGoogleClientSecret: z.string().nullable(),
-            oauthGoogleRedirectUri: z.string().url().endsWith('/api/auth/oauth/google').nullable(),
+            oauthGoogleRedirectUri: z.url().endsWith('/api/auth/oauth/google').nullable(),
 
             oauthGithubClientId: z.string().nullable(),
             oauthGithubClientSecret: z.string().nullable(),
-            oauthGithubRedirectUri: z.string().url().endsWith('/api/auth/oauth/github').nullable(),
+            oauthGithubRedirectUri: z.url().endsWith('/api/auth/oauth/github').nullable(),
 
             oauthOidcClientId: z.string().nullable(),
             oauthOidcClientSecret: z.string().nullable(),
-            oauthOidcAuthorizeUrl: z.string().url().nullable(),
-            oauthOidcTokenUrl: z.string().url().nullable(),
-            oauthOidcUserinfoUrl: z.string().url().nullable(),
-            oauthOidcRedirectUri: z.string().url().endsWith('/api/auth/oauth/oidc').nullable(),
+            oauthOidcAuthorizeUrl: z.url().nullable(),
+            oauthOidcTokenUrl: z.url().nullable(),
+            oauthOidcUserinfoUrl: z.url().nullable(),
+            oauthOidcRedirectUri: z.url().endsWith('/api/auth/oauth/oidc').nullable(),
 
             mfaTotpEnabled: z.boolean(),
             mfaTotpIssuer: z.string(),
@@ -290,22 +290,22 @@ export default fastifyPlugin(
               .union([z.array(z.string()), z.string()])
               .transform((value) => (typeof value === 'string' ? value.split(',') : value)),
 
-            httpWebhookOnUpload: z.string().url().nullable(),
-            httpWebhookOnShorten: z.string().url().nullable(),
+            httpWebhookOnUpload: z.url().nullable(),
+            httpWebhookOnShorten: z.url().nullable(),
 
-            discordWebhookUrl: z.string().url().nullable(),
+            discordWebhookUrl: z.url().nullable(),
             discordUsername: z.string().nullable(),
-            discordAvatarUrl: z.string().url().nullable(),
+            discordAvatarUrl: z.url().nullable(),
 
-            discordOnUploadWebhookUrl: z.string().url().nullable(),
+            discordOnUploadWebhookUrl: z.url().nullable(),
             discordOnUploadUsername: z.string().nullable(),
-            discordOnUploadAvatarUrl: z.string().url().nullable(),
+            discordOnUploadAvatarUrl: z.url().nullable(),
             discordOnUploadContent: z.string().nullable(),
             discordOnUploadEmbed: discordEmbed,
 
-            discordOnShortenWebhookUrl: z.string().url().nullable(),
+            discordOnShortenWebhookUrl: z.url().nullable(),
             discordOnShortenUsername: z.string().nullable(),
-            discordOnShortenAvatarUrl: z.string().url().nullable(),
+            discordOnShortenAvatarUrl: z.url().nullable(),
             discordOnShortenContent: z.string().nullable(),
             discordOnShortenEmbed: discordEmbed,
 

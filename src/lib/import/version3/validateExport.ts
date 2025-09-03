@@ -167,17 +167,18 @@ export const export3Schema = z.object({
       hostname: z.string(),
       release: z.string(),
     }),
-    env: z.record(z.string()),
+    env: z.record(z.string(), z.string()),
   }),
 
-  user_map: z.record(z.string()),
-  thumbnail_map: z.record(z.string()),
-  folder_map: z.record(z.string()),
-  file_map: z.record(z.string()),
-  url_map: z.record(z.string()),
-  invite_map: z.record(z.string()),
+  user_map: z.record(z.string(), z.string()),
+  thumbnail_map: z.record(z.string(), z.string()),
+  folder_map: z.record(z.string(), z.string()),
+  file_map: z.record(z.string(), z.string()),
+  url_map: z.record(z.string(), z.string()),
+  invite_map: z.record(z.string(), z.string()),
 
   users: z.record(
+    z.string(),
     z.object({
       username: z.string(),
       password: z.string().optional().nullable(),
@@ -204,6 +205,7 @@ export const export3Schema = z.object({
   ),
 
   files: z.record(
+    z.string(),
     z.object({
       name: z.string(),
       original_name: z.string().optional().nullable(),
@@ -221,6 +223,7 @@ export const export3Schema = z.object({
   ),
 
   thumbnails: z.record(
+    z.string(),
     z.object({
       name: z.string(),
       created_at: z.string(),
@@ -228,6 +231,7 @@ export const export3Schema = z.object({
   ),
 
   folders: z.record(
+    z.string(),
     z.object({
       name: z.string(),
       public: z.boolean(),
@@ -238,6 +242,7 @@ export const export3Schema = z.object({
   ),
 
   urls: z.record(
+    z.string(),
     z.object({
       destination: z.string(),
       vanity: z.string().optional().nullable(),
@@ -250,6 +255,7 @@ export const export3Schema = z.object({
   ),
 
   invites: z.record(
+    z.string(),
     z.object({
       code: z.string(),
       expires_at: z.string().optional().nullable(),
