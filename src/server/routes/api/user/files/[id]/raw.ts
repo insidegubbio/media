@@ -28,6 +28,19 @@ export default fastifyPlugin(
       const { id } = req.params;
       const { pw, download } = req.query;
 
+      if (id.startsWith('.thumbnail')) {
+        const thumbnail = await prisma.thumbnail.findFirst({
+          where: {
+            path: id,
+            file: {
+              userId: req.user.id,
+            },
+          },
+        });
+
+        if (!thumbnail) return res.callNotFound();
+      }
+
       const file = await prisma.file.findFirst({
         where: {
           id,

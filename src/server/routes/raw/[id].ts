@@ -4,6 +4,7 @@ import { verifyPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
+import { guess } from '@/lib/mimes';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -31,12 +32,35 @@ export const rawFileHandler = async (
   const { id } = req.params;
   const { pw, download } = req.query;
 
+  if (id.startsWith('.thumbnail')) {
+    const thumbnail = await prisma.thumbnail.findFirst({
+      where: {
+        path: id,
+      },
+    });
+
+    if (!thumbnail) return res.callNotFound();
+
+    const size = await datasource.size(thumbnail.path);
+    if (!size) return res.callNotFound();
+
+    const buf = await datasource.get(thumbnail.path);
+    if (!buf) return res.callNotFound();
+
+    return res
+      .type(await guess(thumbnail.path.replace('.thumbnail-', '').split('.').pop() || 'jpg'))
+      .headers({
+        'Content-Length': size,
+      })
+      .status(200)
+      .send(buf);
+  }
+
   const file = await prisma.file.findFirst({
     where: {
       name: decodeURIComponent(id),
     },
   });
-
   if (!file) return res.callNotFound();
 
   if (file?.deletesAt && file.deletesAt <= new Date()) {

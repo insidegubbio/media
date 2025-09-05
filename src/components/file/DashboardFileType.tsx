@@ -83,7 +83,9 @@ export default function DashboardFileType({
   const user = useUserStore((state) => state.user);
   const disableMediaPreview = useSettingsStore((state) => state.settings.disableMediaPreview);
   const fileRoute = user ? `/api/user/files/${(file as DbFile).id}/raw` : `/raw/${file.name}`;
-
+  const thumbnailRoute = user
+    ? `/api/user/files/${(file as DbFile).thumbnail?.path}/raw`
+    : `/raw/${(file as DbFile).thumbnail?.path}`;
   const dbFile = 'id' in file;
   const renderIn = useMemo(() => renderMode(file.name.split('.').pop() || ''), [file.name]);
 
@@ -184,10 +186,7 @@ export default function DashboardFileType({
         />
       ) : (file as DbFile).thumbnail && dbFile ? (
         <Box pos='relative'>
-          <MantineImage
-            src={`/raw/${(file as DbFile).thumbnail!.path}`}
-            alt={file.name || 'Video thumbnail'}
-          />
+          <MantineImage src={thumbnailRoute} alt={file.name || 'Video thumbnail'} />
 
           <Center
             pos='absolute'
