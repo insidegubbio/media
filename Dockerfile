@@ -46,6 +46,8 @@ COPY --from=builder /zipline/build ./build
 COPY --from=builder /zipline/mimes.json ./mimes.json
 COPY --from=builder /zipline/code.json ./code.json
 
+RUN pnpm prisma generate
+
 # clean
 RUN rm -rf /tmp/* /root/*
 
