@@ -1,5 +1,6 @@
 import { ApiAuthInvitesResponse } from '@/server/routes/api/auth/invites';
 import { ApiAuthInvitesIdResponse } from '@/server/routes/api/auth/invites/[id]';
+import { ApiAuthInvitesWebResponse } from '@/server/routes/api/auth/invites/web';
 import { ApiLoginResponse } from '@/server/routes/api/auth/login';
 import { ApiLogoutResponse } from '@/server/routes/api/auth/logout';
 import { ApiAuthOauthResponse } from '@/server/routes/api/auth/oauth';
@@ -45,6 +46,7 @@ import { ApiVersionResponse } from '@/server/routes/api/version';
 export type Response = {
   '/api/auth/invites/[id]': ApiAuthInvitesIdResponse;
   '/api/auth/invites': ApiAuthInvitesResponse;
+  '/api/auth/invites/web': ApiAuthInvitesWebResponse;
   '/api/auth/register': ApiAuthRegisterResponse;
   '/api/auth/webauthn': ApiAuthWebauthnResponse;
   '/api/auth/oauth': ApiAuthOauthResponse;
