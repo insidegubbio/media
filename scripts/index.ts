@@ -15,6 +15,18 @@ function log(message: string) {
 export async function run(name: string, ...steps: Step[]) {
   const { execSync } = await import('child_process');
 
+  const runOne = process.argv[2];
+  if (runOne) {
+    const match = steps.find((s) => `${name}/${s.name}` === runOne);
+    if (!match) {
+      console.error(`x No step found with name "${runOne}"`);
+      process.exit(1);
+    }
+
+    steps = [match];
+  }
+
+  const start = process.hrtime();
   for (const step of steps) {
     if (!step.condition()) {
       log(`- Skipping step "${name}/${step.name}"...`);
@@ -29,4 +41,9 @@ export async function run(name: string, ...steps: Step[]) {
       process.exit(1);
     }
   }
+
+  const diff = process.hrtime(start);
+  const time = diff[0] * 1e9 + diff[1];
+  const timeStr = time > 1e9 ? `${(time / 1e9).toFixed(2)}s` : `${(time / 1e6).toFixed(2)}ms`;
+  log(`✓ Steps in "${name}" completed in ${timeStr}.`);
 }
