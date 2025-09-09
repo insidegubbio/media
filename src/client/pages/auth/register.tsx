@@ -142,7 +142,7 @@ export function Component() {
     if (inviteError) {
       showNotification({
         id: 'invalid-invite',
-        message: 'Invalid or expired invite.',
+        message: 'Invalid or expired invite. Please try again later.',
         color: 'red',
       });
 
