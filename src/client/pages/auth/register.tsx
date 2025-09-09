@@ -1,5 +1,6 @@
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
+import { useTitle } from '@/lib/hooks/useTitle';
 import {
   Button,
   Center,
@@ -18,10 +19,9 @@ import { useForm } from '@mantine/form';
 import { notifications, showNotification } from '@mantine/notifications';
 import { IconLogin, IconPlus, IconUserPlus, IconX } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
-import { Link, redirect, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useSWR, { mutate } from 'swr';
 import GenericError from '../../error/GenericError';
-import { useTitle } from '@/lib/hooks/useTitle';
 
 export function Component() {
   useTitle('Register');
@@ -73,7 +73,7 @@ export function Component() {
     (async () => {
       const res = await fetch('/api/user');
       if (res.ok) {
-        redirect('/dashboard');
+        navigate('/dashboard');
       } else {
         setLoading(false);
       }
@@ -83,7 +83,7 @@ export function Component() {
   useEffect(() => {
     if (!config) return;
 
-    if (!config?.features.userRegistration) {
+    if (!config?.features.userRegistration && !code) {
       navigate('/auth/login');
     }
   }, [code, config]);
@@ -122,7 +122,7 @@ export function Component() {
       });
 
       mutate('/api/user');
-      redirect('/dashboard');
+      navigate('/dashboard');
     }
   };
 
