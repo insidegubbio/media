@@ -41,6 +41,7 @@ export const getExtension = (filename: string, override?: string): string => {
 export type ApiUploadResponse = {
   files: {
     id: string;
+    name: string;
     type: string;
     url: string;
     pending?: boolean;
@@ -212,6 +213,7 @@ export default fastifyPlugin(
 
         response.files.push({
           id: fileUpload.id,
+          name: fileUpload.name,
           type: fileUpload.type,
           url: encodeURI(responseUrl),
           removedGps: removedGps || undefined,

@@ -256,6 +256,7 @@ export default fastifyPlugin(
 
         response.files.push({
           id: fileUpload.id,
+          name: fileUpload.name,
           type: fileUpload.type,
           url: responseUrl,
           pending: true,
