@@ -1,5 +1,6 @@
 import { log } from '@/lib/logger';
 import { parse } from './transform';
+import { readFileSync } from 'node:fs';
 
 export type EnvType = 'string' | 'string[]' | 'number' | 'boolean' | 'byte' | 'ms' | 'json';
 export function env(property: string, env: string | string[], type: EnvType, isDb: boolean = false) {
@@ -178,7 +179,17 @@ export function readEnv(): EnvResult {
       env.variable = env.variable.find((v) => process.env[v] !== undefined) || 'DATABASE_URL';
     }
 
-    const value = process.env[env.variable];
+    let value = process.env[env.variable];
+    const valueFileName = process.env[`${env.variable}_FILE`];
+    if (valueFileName) {
+      try {
+        value = readFileSync(valueFileName, 'utf-8').trim();
+        logger.debug('Using env value from file', { variable: env.variable, file: valueFileName });
+      } catch (e) {
+        logger.error(`Failed to read env value from file for ${env.variable}. Skipping...`).error(e as Error);
+        continue;
+      }
+    }
 
     if (value === undefined) continue;
 
