@@ -175,11 +175,23 @@ function TagsFilter({
   );
 }
 
-export default function FileTable({ id }: { id?: string }) {
+export default function FileTable({
+  id,
+  tableEdit,
+  idSearch,
+}: {
+  id?: string;
+  tableEdit: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+  };
+  idSearch: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+  };
+}) {
   const clipboard = useClipboard();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
-
-  const [tableEditOpen, setTableEditOpen] = useState(false);
 
   const fields = useFileTableSettingsStore((state) => state.fields);
 
@@ -204,7 +216,6 @@ export default function FileTable({ id }: { id?: string }) {
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const [idSearchOpen, setIdSearchOpen] = useState(false);
   const [searchField, setSearchField] = useState<'name' | 'originalName' | 'type' | 'tags' | 'id'>('name');
   const [searchQuery, setSearchQuery] = useReducer(
     (state: ReducerQuery['state'], action: ReducerQuery['action']) => {
@@ -218,13 +229,13 @@ export default function FileTable({ id }: { id?: string }) {
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
   useEffect(() => {
-    if (idSearchOpen) return;
+    if (idSearch.open) return;
 
     setSearchQuery({
       field: 'id',
       query: '',
     });
-  }, [idSearchOpen]);
+  }, [idSearch.open]);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -389,33 +400,9 @@ export default function FileTable({ id }: { id?: string }) {
         file={selectedFile}
       />
 
-      <TableEditModal opened={tableEditOpen} onCLose={() => setTableEditOpen(false)} />
+      <TableEditModal opened={tableEdit.open} onCLose={() => tableEdit.setOpen(false)} />
 
       <Box>
-        <Group>
-          <Tooltip label='Table Options'>
-            <ActionIcon
-              variant='outline'
-              onClick={() => setTableEditOpen((open) => !open)}
-              style={{ position: 'relative', top: '-36.4px', left: '221px', margin: 0 }}
-            >
-              <IconTableOptions size='1rem' />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label='Search by ID'>
-            <ActionIcon
-              variant='outline'
-              onClick={() => {
-                setIdSearchOpen((open) => !open);
-              }}
-              // lol if it works it works :shrug:
-              style={{ position: 'relative', top: '-36.4px', left: '221px', margin: 0 }}
-            >
-              <IconGridPatternFilled size='1rem' />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-
         <Collapse in={selectedFiles.length > 0}>
           <Paper withBorder p='sm' my='sm'>
             <Text size='sm' c='dimmed' mb='xs'>
@@ -500,8 +487,8 @@ export default function FileTable({ id }: { id?: string }) {
           </Paper>
         </Collapse>
 
-        <Collapse in={idSearchOpen}>
-          <Paper withBorder p='sm' my='sm'>
+        <Collapse in={idSearch.open}>
+          <Paper withBorder p='sm' mt='sm'>
             <TextInput
               placeholder='Search by ID'
               value={searchQuery.id}
@@ -519,6 +506,7 @@ export default function FileTable({ id }: { id?: string }) {
 
         {/* @ts-ignore */}
         <DataTable
+          mt='xs'
           borderRadius='sm'
           withTableBorder
           minHeight={200}

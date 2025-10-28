@@ -6,11 +6,15 @@ import FileTable from './views/FileTable';
 import Files from './views/Files';
 import TagsButton from './tags/TagsButton';
 import PendingFilesButton from './PendingFilesButton';
-import { IconFileUpload } from '@tabler/icons-react';
+import { IconFileUpload, IconGridPatternFilled, IconTableOptions } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 export default function DashboardFiles() {
   const view = useViewStore((state) => state.files);
+
+  const [tableEditOpen, setTableEditOpen] = useState(false);
+  const [idSearchOpen, setIdSearchOpen] = useState(false);
 
   return (
     <>
@@ -28,6 +32,23 @@ export default function DashboardFiles() {
         <TagsButton />
         <PendingFilesButton />
 
+        <Tooltip label='Table Options'>
+          <ActionIcon variant='outline' onClick={() => setTableEditOpen((open) => !open)}>
+            <IconTableOptions size='1rem' />
+          </ActionIcon>
+        </Tooltip>
+
+        <Tooltip label='Search by ID'>
+          <ActionIcon
+            variant='outline'
+            onClick={() => {
+              setIdSearchOpen((open) => !open);
+            }}
+          >
+            <IconGridPatternFilled size='1rem' />
+          </ActionIcon>
+        </Tooltip>
+
         <GridTableSwitcher type='files' />
       </Group>
 
@@ -38,7 +59,16 @@ export default function DashboardFiles() {
           <Files />
         </>
       ) : (
-        <FileTable />
+        <FileTable
+          idSearch={{
+            open: idSearchOpen,
+            setOpen: setIdSearchOpen,
+          }}
+          tableEdit={{
+            open: tableEditOpen,
+            setOpen: setTableEditOpen,
+          }}
+        />
       )}
     </>
   );
