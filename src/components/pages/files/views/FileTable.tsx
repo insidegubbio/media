@@ -34,9 +34,7 @@ import {
   IconDownload,
   IconExternalLink,
   IconFile,
-  IconGridPatternFilled,
   IconStar,
-  IconTableOptions,
   IconTrashFilled,
 } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
