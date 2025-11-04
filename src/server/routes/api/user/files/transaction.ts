@@ -2,6 +2,8 @@ import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
+import { canInteract } from '@/lib/role';
+import { Role } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
 
@@ -22,6 +24,18 @@ type Body = {
 
 const logger = log('api').c('user').c('files').c('transaction');
 
+function checkInteraction(current: Role, roles: Role[]) {
+  const indices: number[] = [];
+
+  for (let i = 0; i !== roles.length; ++i) {
+    if (!canInteract(current, roles[i])) {
+      indices.push(i);
+    }
+  }
+
+  return indices;
+}
+
 export const PATH = '/api/user/files/transaction';
 export default fastifyPlugin(
   (server, _, done) => {
@@ -34,14 +48,28 @@ export default fastifyPlugin(
         if (!files || !files.length) return res.badRequest('Cannot process transaction without files');
 
         if (typeof favorite === 'boolean') {
+          const toFavoriteFiles = await prisma.file.findMany({
+            where: {
+              id: { in: files },
+            },
+            include: {
+              User: true,
+            },
+          });
+
+          const invalids = checkInteraction(
+            req.user.role,
+            toFavoriteFiles.map((f) => f.User?.role ?? 'USER'),
+          );
+          if (invalids.length > 0)
+            return res.forbidden(`You don't have the permission to modify files[${invalids.join(', ')}]`);
+
           const resp = await prisma.file.updateMany({
             where: {
               id: {
                 in: files,
               },
-              userId: req.user.id,
             },
-
             data: {
               favorite: favorite,
             },
@@ -51,6 +79,7 @@ export default fastifyPlugin(
 
           logger.info(`${req.user.username} ${favorite ? 'favorited' : 'unfavorited'} ${resp.count} files`, {
             user: req.user.id,
+            owners: toFavoriteFiles.map((f) => f.userId),
           });
 
           return res.send(resp);
@@ -108,21 +137,28 @@ export default fastifyPlugin(
           files: files.length,
         });
 
-        if (delete_datasourceFiles) {
-          const dFiles = await prisma.file.findMany({
-            where: {
-              id: {
-                in: files,
-              },
-              userId: req.user.id,
-            },
-          });
+        const toDeleteFiles = await prisma.file.findMany({
+          where: {
+            id: { in: files },
+          },
+          include: {
+            User: true,
+          },
+        });
 
-          for (let i = 0; i !== dFiles.length; ++i) {
-            await datasource.delete(dFiles[i].name);
+        const invalids = checkInteraction(
+          req.user.role,
+          toDeleteFiles.map((f) => f.User?.role ?? 'USER'),
+        );
+        if (invalids.length > 0)
+          return res.forbidden(`You don't have the permission to delete files[${invalids.join(', ')}]`);
+
+        if (delete_datasourceFiles) {
+          for (let i = 0; i !== toDeleteFiles.length; ++i) {
+            await datasource.delete(toDeleteFiles[i].name);
           }
 
-          logger.info(`${req.user.username} deleted ${dFiles.length} files from datasource`, {
+          logger.info(`${req.user.username} deleted ${toDeleteFiles.length} files from datasource`, {
             user: req.user.id,
           });
         }
@@ -132,7 +168,6 @@ export default fastifyPlugin(
             id: {
               in: files,
             },
-            userId: req.user.id,
           },
         });
 
@@ -140,6 +175,7 @@ export default fastifyPlugin(
 
         logger.info(`${req.user.username} deleted ${resp.count} files`, {
           user: req.user.id,
+          owners: toDeleteFiles.map((f) => f.userId),
         });
 
         return res.send(resp);

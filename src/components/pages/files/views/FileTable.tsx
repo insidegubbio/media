@@ -388,6 +388,8 @@ export default function FileTable({
     }
   }, [searchField]);
 
+  const unfavoriteAll = selectedFiles.every((file) => file.favorite);
+
   return (
     <>
       <FileModal
@@ -396,6 +398,7 @@ export default function FileTable({
           if (!open) setSelectedFile(null);
         }}
         file={selectedFile}
+        user={id}
       />
 
       <TableEditModal opened={tableEdit.open} onCLose={() => tableEdit.setOpen(false)} />
@@ -427,48 +430,56 @@ export default function FileTable({
                   variant='outline'
                   color='yellow'
                   leftSection={<IconStar size='1rem' />}
-                  onClick={() => bulkFavorite(selectedFiles.map((x) => x.id))}
+                  onClick={() =>
+                    bulkFavorite(
+                      selectedFiles.map((x) => x.id),
+                      !unfavoriteAll,
+                    )
+                  }
                 >
-                  Favorite {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}
+                  {unfavoriteAll ? 'Unfavorite' : 'Favorite'} {selectedFiles.length} file
+                  {selectedFiles.length > 1 ? 's' : ''}
                 </Button>
 
-                <Combobox
-                  store={combobox}
-                  withinPortal={false}
-                  onOptionSubmit={(value) => handleAddFolder(value)}
-                >
-                  <Combobox.Target>
-                    <InputBase
-                      rightSection={<Combobox.Chevron />}
-                      value={folderSearch}
-                      onChange={(event) => {
-                        combobox.openDropdown();
-                        combobox.updateSelectedOptionIndex();
-                        setFolderSearch(event.currentTarget.value);
-                      }}
-                      onClick={() => combobox.openDropdown()}
-                      onFocus={() => combobox.openDropdown()}
-                      onBlur={() => {
-                        combobox.closeDropdown();
-                        setFolderSearch(folderSearch || '');
-                      }}
-                      placeholder='Add to folder...'
-                      rightSectionPointerEvents='none'
-                    />
-                  </Combobox.Target>
+                {!id && (
+                  <Combobox
+                    store={combobox}
+                    withinPortal={false}
+                    onOptionSubmit={(value) => handleAddFolder(value)}
+                  >
+                    <Combobox.Target>
+                      <InputBase
+                        rightSection={<Combobox.Chevron />}
+                        value={folderSearch}
+                        onChange={(event) => {
+                          combobox.openDropdown();
+                          combobox.updateSelectedOptionIndex();
+                          setFolderSearch(event.currentTarget.value);
+                        }}
+                        onClick={() => combobox.openDropdown()}
+                        onFocus={() => combobox.openDropdown()}
+                        onBlur={() => {
+                          combobox.closeDropdown();
+                          setFolderSearch(folderSearch || '');
+                        }}
+                        placeholder='Add to folder...'
+                        rightSectionPointerEvents='none'
+                      />
+                    </Combobox.Target>
 
-                  <Combobox.Dropdown>
-                    <Combobox.Options>
-                      {folders
-                        ?.filter((f) => f.name.toLowerCase().includes(folderSearch.toLowerCase().trim()))
-                        .map((f) => (
-                          <Combobox.Option value={f.id} key={f.id}>
-                            {f.name}
-                          </Combobox.Option>
-                        ))}
-                    </Combobox.Options>
-                  </Combobox.Dropdown>
-                </Combobox>
+                    <Combobox.Dropdown>
+                      <Combobox.Options>
+                        {folders
+                          ?.filter((f) => f.name.toLowerCase().includes(folderSearch.toLowerCase().trim()))
+                          .map((f) => (
+                            <Combobox.Option value={f.id} key={f.id}>
+                              {f.name}
+                            </Combobox.Option>
+                          ))}
+                      </Combobox.Options>
+                    </Combobox.Dropdown>
+                  </Combobox>
+                )}
               </Group>
 
               <Button

@@ -7,6 +7,7 @@ import { File, fileSelect } from '@/lib/db/models/file';
 import { log } from '@/lib/logger';
 import { userMiddleware } from '@/server/middleware/user';
 import fastifyPlugin from 'fastify-plugin';
+import { canInteract } from '@/lib/role';
 
 export type ApiUserFilesIdResponse = File;
 
@@ -33,11 +34,12 @@ export default fastifyPlugin(
       const file = await prisma.file.findFirst({
         where: {
           OR: [{ id: req.params.id }, { name: req.params.id }],
-          userId: req.user.id,
         },
-        select: fileSelect,
+        select: { User: true, ...fileSelect },
       });
       if (!file) return res.notFound();
+
+      if (!canInteract(req.user.role, file.User?.role ?? 'USER')) return res.notFound();
 
       return res.send(file);
     });
@@ -49,11 +51,12 @@ export default fastifyPlugin(
       const file = await prisma.file.findFirst({
         where: {
           OR: [{ id: req.params.id }, { name: req.params.id }],
-          userId: req.user.id,
         },
-        select: fileSelect,
+        select: { User: true, ...fileSelect },
       });
       if (!file) return res.notFound();
+
+      if (!canInteract(req.user.role, file.User?.role ?? 'USER')) return res.notFound();
 
       const data: Prisma.FileUpdateInput = {};
 
@@ -126,6 +129,7 @@ export default fastifyPlugin(
       logger.info(`${req.user.username} updated file ${newFile.name}`, {
         updated: Object.keys(req.body),
         id: newFile.id,
+        owner: file.User?.id,
       });
 
       return res.send(newFile);
@@ -135,10 +139,14 @@ export default fastifyPlugin(
       const file = await prisma.file.findFirst({
         where: {
           OR: [{ id: req.params.id }, { name: req.params.id }],
-          userId: req.user.id,
+        },
+        include: {
+          User: true,
         },
       });
       if (!file) return res.notFound();
+
+      if (!canInteract(req.user.role, file.User?.role ?? 'USER')) return res.notFound();
 
       const deletedFile = await prisma.file.delete({
         where: {
@@ -151,6 +159,7 @@ export default fastifyPlugin(
 
       logger.info(`${req.user.username} deleted file ${deletedFile.name}`, {
         size: bytes(deletedFile.size),
+        owner: file.User?.id,
       });
 
       return res.send(deletedFile);

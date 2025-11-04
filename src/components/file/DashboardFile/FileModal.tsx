@@ -88,11 +88,13 @@ export default function FileModal({
   setOpen,
   file,
   reduce,
+  user,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
   file?: File | null;
   reduce?: boolean;
+  user?: string;
 }) {
   const clipboard = useClipboard();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
@@ -226,7 +228,7 @@ export default function FileModal({
               )}
             </SimpleGrid>
 
-            {!reduce && (
+            {!reduce && !user && (
               <SimpleGrid cols={{ base: 1, md: 2 }} spacing='md' my='xs'>
                 <Box>
                   <Title order={4} mt='lg' mb='xs'>

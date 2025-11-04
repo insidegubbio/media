@@ -69,20 +69,23 @@ export async function bulkDelete(ids: string[], setSelectedFiles: (files: File[]
   });
 }
 
-export async function bulkFavorite(ids: string[]) {
+export async function bulkFavorite(ids: string[], favorite: boolean) {
+  const text = favorite ? 'favorite' : 'unfavorite';
+  const textcaps = favorite ? 'Favorite' : 'Unfavorite';
+
   modals.openConfirmModal({
     centered: true,
-    title: `Favorite ${ids.length} file${ids.length === 1 ? '' : 's'}?`,
-    children: `You are about to favorite ${ids.length} file${ids.length === 1 ? '' : 's'}.`,
+    title: `${textcaps} ${ids.length} file${ids.length === 1 ? '' : 's'}?`,
+    children: `You are about to ${text} ${ids.length} file${ids.length === 1 ? '' : 's'}.`,
     labels: {
       cancel: 'Cancel',
-      confirm: 'Favorite',
+      confirm: `${textcaps}`,
     },
     confirmProps: { color: 'yellow' },
     onConfirm: async () => {
       notifications.show({
-        title: 'Favoriting files',
-        message: `Favoriting ${ids.length} file${ids.length === 1 ? '' : 's'}`,
+        title: `${textcaps}ing files`,
+        message: `${textcaps}ing ${ids.length} file${ids.length === 1 ? '' : 's'}`,
         color: 'yellow',
         loading: true,
         id: 'bulk-favorite',
@@ -96,13 +99,13 @@ export async function bulkFavorite(ids: string[]) {
         {
           files: ids,
 
-          favorite: true,
+          favorite,
         },
       );
 
       if (error) {
         notifications.update({
-          title: 'Error while favoriting files',
+          title: 'Error while modifying files',
           message: error.error,
           color: 'red',
           icon: <IconStarsOff size='1rem' />,
@@ -112,8 +115,8 @@ export async function bulkFavorite(ids: string[]) {
         });
       } else if (data) {
         notifications.update({
-          title: 'Favorited files',
-          message: `Favorited ${data.count} file${ids.length === 1 ? '' : 's'}`,
+          title: `${textcaps}d files`,
+          message: `${textcaps}d ${data.count} file${ids.length === 1 ? '' : 's'}`,
           color: 'yellow',
           icon: <IconStarsFilled size='1rem' />,
           id: 'bulk-favorite',
