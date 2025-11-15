@@ -99,8 +99,7 @@ export default function StatsTables({ data }: { data: Metric[] }) {
 
   const recent = data[0]; // it is sorted by desc so 0 is the first one.
 
-  if (recent.data.filesUsers.length === 0) return null;
-  if (recent.data.urlsUsers.length === 0) return null;
+  if (recent.data.filesUsers.length === 0 || recent.data.urlsUsers.length === 0) return null;
 
   return (
     <>
@@ -121,7 +120,7 @@ export default function StatsTables({ data }: { data: Metric[] }) {
                   .sort((a, b) => b.sum - a.sum)
                   .map((count, i) => (
                     <Table.Tr key={i}>
-                      <Table.Td>{count.username}</Table.Td>
+                      <Table.Td>{count.username ?? '[unknown]'}</Table.Td>
                       <Table.Td>{count.sum}</Table.Td>
                       <Table.Td>{bytes(count.storage)}</Table.Td>
                       <Table.Td>{count.views}</Table.Td>
@@ -147,7 +146,7 @@ export default function StatsTables({ data }: { data: Metric[] }) {
                   .sort((a, b) => b.sum - a.sum)
                   .map((count, i) => (
                     <Table.Tr key={i}>
-                      <Table.Td>{count.username}</Table.Td>
+                      <Table.Td>{count.username ?? '[unknown]'}</Table.Td>
                       <Table.Td>{count.sum}</Table.Td>
                       <Table.Td>{count.views}</Table.Td>
                     </Table.Tr>

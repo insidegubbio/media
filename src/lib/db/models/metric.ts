@@ -19,7 +19,7 @@ export const metricDataSchema = z.object({
 
   filesUsers: z.array(
     z.object({
-      username: z.string(),
+      username: z.string().nullable(),
       sum: z.number(),
       storage: z.number(),
       views: z.number(),
@@ -27,7 +27,7 @@ export const metricDataSchema = z.object({
   ),
   urlsUsers: z.array(
     z.object({
-      username: z.string(),
+      username: z.string().nullable(),
       sum: z.number(),
       views: z.number(),
     }),
