@@ -157,7 +157,6 @@ export default function Login() {
   }, [user]);
 
   useEffect(() => {
-    console.log({ willRedirect, config });
     if (willRedirect && config) {
       const provider = Object.keys(config.oauthEnabled).find(
         (x) => config.oauthEnabled[x as keyof typeof config.oauthEnabled] === true,

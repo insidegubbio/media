@@ -20,8 +20,6 @@ export default function DashboardSettings() {
   const config = useConfig();
   const user = useUserStore((state) => state.user);
 
-  console.log(config.oauthEnabled);
-
   return (
     <>
       <Group gap='sm'>

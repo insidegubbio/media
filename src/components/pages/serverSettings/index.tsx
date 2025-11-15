@@ -32,7 +32,6 @@ export default function DashboardServerSettings() {
 
   const scrollToSetting = useMemo(() => {
     return (setting: string) => {
-      console.log('scrolling to setting:', setting);
       const input = document.querySelector<HTMLInputElement>(`[data-path="${setting}"]`);
       if (input) {
         const observer = new IntersectionObserver(
