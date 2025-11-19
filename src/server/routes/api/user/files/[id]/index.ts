@@ -148,7 +148,8 @@ export default fastifyPlugin(
       });
       if (!file) return res.notFound();
 
-      if (!canInteract(req.user.role, file.User?.role ?? 'USER')) return res.notFound();
+      if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
+        return res.notFound();
 
       const deletedFile = await prisma.file.delete({
         where: {
