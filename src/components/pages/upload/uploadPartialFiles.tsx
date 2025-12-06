@@ -250,6 +250,8 @@ export async function uploadPartialFiles(
           'x-zipline-image-compression-percent',
           options.imageCompressionPercent.toString(),
         );
+      options.imageCompressionFormat !== 'default' &&
+        req.setRequestHeader('x-zipline-image-compression-type', options.imageCompressionFormat);
       options.maxViews && req.setRequestHeader('x-zipline-max-views', options.maxViews.toString());
       options.addOriginalName && req.setRequestHeader('x-zipline-original-name', 'true');
       options.overrides_returnDomain &&

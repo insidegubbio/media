@@ -1,3 +1,4 @@
+import { extname } from 'path';
 import sharp from 'sharp';
 
 export const COMPRESS_TYPES = ['jpg', 'jpeg', 'png', 'webp', 'jxl'] as const;
@@ -22,7 +23,9 @@ export function checkOutput(type: CompressType): boolean {
 export async function compressFile(filePath: string, options: CompressOptions): Promise<CompressResult> {
   const { quality, type } = options;
 
-  const image = sharp(filePath).withMetadata();
+  const animated = ['.gif', '.webp', '.avif', '.tiff'].includes(extname(filePath).toLowerCase());
+
+  const image = sharp(filePath, { animated }).withMetadata();
 
   const result: CompressResult = {
     mimetype: '',
@@ -56,7 +59,7 @@ export async function compressFile(filePath: string, options: CompressOptions): 
       break;
   }
 
-  await sharp(buffer).toFile(filePath);
+  await sharp(buffer, { animated }).toFile(filePath);
 
   return result;
 }

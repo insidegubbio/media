@@ -185,6 +185,7 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
 
   const imageCompressionPercent = headers['x-zipline-image-compression-percent'];
   const imageCompressionType = headers['x-zipline-image-compression-type'];
+
   if (imageCompressionType) {
     if (!imageCompressionPercent)
       return headerError(
