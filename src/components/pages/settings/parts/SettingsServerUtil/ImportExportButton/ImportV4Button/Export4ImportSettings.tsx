@@ -1,5 +1,5 @@
 import { Export4 } from '@/lib/import/version4/validateExport';
-import { Box, Button, Checkbox, Code, Collapse, Group, Paper, Table, Text } from '@mantine/core';
+import { Box, Button, Checkbox, Collapse, Group, Paper, Table, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 
 export default function Export4ImportSettings({
