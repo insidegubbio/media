@@ -1,7 +1,6 @@
 import { useConfig } from '@/components/ConfigProvider';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
-import { ErrorBody } from '@/lib/response';
 import { UploadOptionsStore } from '@/lib/store/uploadOptions';
 import { ActionIcon, Anchor, Group, Stack, Table, Text, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
@@ -9,6 +8,7 @@ import { modals } from '@mantine/modals';
 import { hideNotification, notifications } from '@mantine/notifications';
 import { IconClipboardCopy, IconExternalLink, IconFileUpload, IconFileXFilled } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { handleResponse } from './uploadFiles';
 
 export function filesModal(
   files: Response['/api/upload']['files'],
@@ -162,13 +162,13 @@ export async function uploadPartialFiles(
       req.addEventListener(
         'load',
         () => {
-          const res: Response['/api/upload/partial'] = JSON.parse(req.responseText);
+          const { data: res, error } = handleResponse<Response['/api/upload/partial']>(req);
 
-          if ((res as ErrorBody).error) {
+          if (error || !res) {
             notifications.update({
               id: 'upload-partial',
               title: 'Error uploading files',
-              message: (res as ErrorBody).error,
+              message: error?.error ?? 'An unknown error occurred',
               color: 'red',
               icon: <IconFileXFilled size='1rem' />,
               autoClose: false,

@@ -8,6 +8,40 @@ import { notifications } from '@mantine/notifications';
 import { IconClipboardCopy, IconExternalLink, IconFileUpload, IconFileXFilled } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 
+export function handleResponse<R = Response['/api/upload']>(
+  xml: XMLHttpRequest,
+): { data: R | null; error: ErrorBody | null } {
+  if (xml.status < 200 || xml.status >= 300) {
+    return {
+      data: null,
+      error: {
+        statusCode: xml.status,
+        error: `Request failed with status code ${xml.status}: ${xml.responseText}`,
+      },
+    };
+  }
+
+  try {
+    const res = JSON.parse(xml.responseText) as R | ErrorBody;
+
+    if ((res as ErrorBody).statusCode) {
+      return { data: null, error: res as ErrorBody };
+    }
+
+    return { data: res as R, error: null };
+  } catch (e) {
+    console.error('Failed to parse server response:', e, xml.responseText);
+
+    return {
+      data: null,
+      error: {
+        statusCode: 500,
+        error: 'Failed to parse server response. See browser console for more details.',
+      },
+    };
+  }
+}
+
 export function filesModal(
   files: Response['/api/upload']['files'],
   {
@@ -150,21 +184,21 @@ export function uploadFiles(
   req.addEventListener(
     'load',
     () => {
-      const res: Response['/api/upload'] = JSON.parse(req.responseText);
+      const { data: res, error } = handleResponse<Response['/api/upload']>(req);
+
       setLoading(false);
       setProgress({ percent: 0, remaining: 0, speed: 0 });
 
-      if ((res as ErrorBody).statusCode) {
+      if (error || !res) {
         notifications.update({
           id: 'upload',
           title: 'Error uploading files',
-          message: (res as ErrorBody).error,
+          message: error?.error ?? 'An unknown error occurred',
           color: 'red',
           icon: <IconFileXFilled size='1rem' />,
           autoClose: true,
           loading: false,
         });
-
         return;
       }
 
@@ -177,8 +211,9 @@ export function uploadFiles(
         autoClose: true,
         loading: false,
       });
+
       setFiles([]);
-      filesModal(res.files, { clipboard, clearEphemeral });
+      filesModal(res!.files, { clipboard, clearEphemeral });
     },
     false,
   );
