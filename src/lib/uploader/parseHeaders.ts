@@ -2,6 +2,7 @@ import ms from 'ms';
 import { Config } from '../config/validate';
 import { checkOutput, COMPRESS_TYPES, CompressType } from '../compress';
 import { config } from '../config';
+import { sanitizeExtension, sanitizeFilename } from '../fs';
 
 // from ms@3.0.0-canary.1
 type Unit =
@@ -253,12 +254,19 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
   response.overrides = {};
 
   const filename = headers['x-zipline-filename'];
-  if (filename) response.overrides.filename = filename;
+  if (filename) {
+    const fn = sanitizeFilename(filename);
+    if (!fn) return headerError('x-zipline-filename', 'Invalid filename');
+
+    response.overrides.filename = fn;
+  }
 
   const extension = headers['x-zipline-file-extension'];
   if (extension) {
-    if (!extension.startsWith('.')) response.overrides.extension = `.${extension}`;
-    else response.overrides.extension = extension;
+    const ext = sanitizeExtension(extension);
+    if (!ext) return headerError('x-zipline-file-extension', 'Invalid file extension');
+
+    response.overrides.extension = ext;
   }
 
   const returnDomain = headers['x-zipline-domain'];

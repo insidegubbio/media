@@ -23,3 +23,9 @@ export function sanitizeFilename(name: string): string | null {
 
   return basename(normalized);
 }
+
+export function sanitizeExtension(ext: string): string | null {
+  if (ext.includes('/') || ext.includes('\\') || ext.includes('..')) return null;
+
+  return ext.startsWith('.') ? ext : `.${ext}`;
+}
