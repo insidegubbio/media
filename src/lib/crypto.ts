@@ -2,32 +2,36 @@ import crypto from 'crypto';
 import { hash, verify } from 'argon2';
 import { randomCharacters } from './random';
 
-const ALGORITHM = 'aes-256-cbc';
+const ALGORITHM = 'aes-256-gcm';
 
 export function createKey(secret: string): Buffer {
   return crypto.createHash('sha256').update(secret, 'utf8').digest();
 }
 
 export function encrypt(value: string, secret: string): string {
-  const key = createKey(secret);
-  const iv = crypto.randomBytes(16);
+  const key = crypto.createHash('sha256').update(secret, 'utf8').digest();
+  const iv = crypto.randomBytes(12);
 
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
   const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
 
-  return iv.toString('hex') + '.' + encrypted.toString('hex');
+  return `${iv.toString('hex')}.${encrypted.toString('hex')}.${tag.toString('hex')}`;
 }
 
 export function decrypt(value: string, secret: string): string {
-  const key = createKey(secret);
-  const [ivHex, encryptedHex] = value.split('.');
-  if (!ivHex || !encryptedHex) throw new Error('Invalid values');
+  const key = crypto.createHash('sha256').update(secret, 'utf8').digest();
+  const [ivHex, encryptedHex, tagHex] = value.split('.');
+  if (!ivHex || !encryptedHex || !tagHex) throw new Error('Invalid values');
 
   const iv = Buffer.from(ivHex, 'hex');
   const encrypted = Buffer.from(encryptedHex, 'hex');
+  const tag = Buffer.from(tagHex, 'hex');
 
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(tag);
+
   const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
 
   return decrypted.toString('utf8');
