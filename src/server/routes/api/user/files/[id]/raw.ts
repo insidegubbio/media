@@ -3,6 +3,7 @@ import { config } from '@/lib/config';
 import { verifyPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
+import { sanitizeFilename } from '@/lib/fs';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
 import { userMiddleware } from '@/server/middleware/user';
@@ -26,8 +27,10 @@ export default fastifyPlugin(
       Querystring: Querystring;
       Params: Params;
     }>(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const { id } = req.params;
       const { pw, download } = req.query;
+
+      const id = sanitizeFilename(req.params.id);
+      if (!id) return res.callNotFound();
 
       if (id.startsWith('.thumbnail')) {
         const thumbnail = await prisma.thumbnail.findFirst({
