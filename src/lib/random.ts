@@ -12,11 +12,11 @@ function getRandomValues(array: Uint8Array) {
 }
 
 export function randomCharacters(length: number) {
-  const randomValues = new Uint8Array(length);
-  getRandomValues(randomValues);
-
+  const randomValues = new Uint8Array(Math.ceil(length * 1.5));
   let result = '';
+
   while (result.length < length) {
+    getRandomValues(randomValues);
     for (let i = 0; i !== randomValues.length && result.length !== length; ++i) {
       const value = randomValues[i];
       if (value < MAX) {
