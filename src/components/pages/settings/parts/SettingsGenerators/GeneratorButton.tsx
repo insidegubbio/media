@@ -104,14 +104,12 @@ export default function GeneratorButton({
   );
 
   const { data: tokenData, isLoading, error } = useSWR<Response['/api/user/token']>('/api/user/token');
-  const { data: settingsData } = useSWR<Response['/api/server/settings']>('/api/server/settings');
+  const { data: settingsData } = useSWR<Response['/api/server/public']>('/api/server/public');
 
   const isUnixLike = name === 'Flameshot' || name === 'Shell Script';
   const onlyFile = generatorType === 'file';
 
-  const domains = Array.isArray(settingsData?.settings.domains)
-    ? settingsData?.settings.domains.map((d) => String(d))
-    : [];
+  const domains = Array.isArray(settingsData?.domains) ? settingsData?.domains.map((d) => String(d)) : [];
   const domainOptions = [
     { value: '', label: 'Default Domain' },
     ...domains.map((domain) => ({
