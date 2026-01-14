@@ -50,7 +50,7 @@ export default function cleanThumbnails(prisma: typeof globalThis.__db__) {
       totals: {
         fs: fsThumbnails.length - fsOrphaned.length,
         db: dbThumbnails.length - dbOrphaned.length,
-      }
+      },
     });
   };
 }

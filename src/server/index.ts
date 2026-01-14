@@ -292,7 +292,11 @@ async function main() {
   tasks.interval('deletefiles', ms(config.tasks.deleteInterval as StringValue), deleteFiles(prisma));
   tasks.interval('maxviews', ms(config.tasks.maxViewsInterval as StringValue), maxViews(prisma));
   tasks.interval('clearinvites', ms(config.tasks.clearInvitesInterval as StringValue), clearInvites(prisma));
-  tasks.interval('cleanthumbnails', ms(config.tasks.cleanThumbnailsInterval as StringValue), cleanThumbnails(prisma));
+  tasks.interval(
+    'cleanthumbnails',
+    ms(config.tasks.cleanThumbnailsInterval as StringValue),
+    cleanThumbnails(prisma),
+  );
 
   if (config.features.metrics)
     tasks.interval('metrics', ms(config.tasks.metricsInterval as StringValue), metrics(prisma));
