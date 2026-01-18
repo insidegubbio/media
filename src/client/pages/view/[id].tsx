@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSsrData } from '../../../components/ZiplineSSRProvider';
 import { getFile } from '../../ssr-view/server';
+import { useTitle } from '@/lib/hooks/useTitle';
 
 type SsrData = {
   file: Partial<NonNullable<Awaited<ReturnType<typeof getFile>>>>;
@@ -54,6 +55,8 @@ export default function ViewFileId() {
   const [passwordValue, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
+
+  useTitle(file.name ?? 'View File');
 
   return password && !pw ? (
     <Modal onClose={() => {}} opened={true} withCloseButton={false} centered title='Password required'>

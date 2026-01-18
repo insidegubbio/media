@@ -2,6 +2,7 @@ import ConfigProvider from '@/components/ConfigProvider';
 import UploadFile from '@/components/pages/upload/File';
 import { type Response } from '@/lib/api/response';
 import { SafeConfig } from '@/lib/config/safe';
+import { useTitle } from '@/lib/hooks/useTitle';
 import { Anchor, Center, Container, Text } from '@mantine/core';
 import { data, Link, Params, useLoaderData } from 'react-router-dom';
 import useSWR from 'swr';
@@ -26,6 +27,8 @@ export function Component() {
     refreshWhenHidden: false,
     revalidateIfStale: false,
   });
+
+  useTitle(`Upload to ${folder.name ?? 'folder'}`);
 
   return (
     <>

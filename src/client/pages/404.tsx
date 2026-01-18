@@ -1,8 +1,11 @@
+import { useTitle } from '@/lib/hooks/useTitle';
 import { Button, Center, Stack, Text, Title } from '@mantine/core';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 
 export default function FourOhFour() {
+  useTitle('404');
+
   return (
     <Center h='100vh'>
       <Stack>

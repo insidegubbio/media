@@ -1,4 +1,5 @@
 import { type Response } from '@/lib/api/response';
+import { useTitle } from '@/lib/hooks/useTitle';
 import { ActionIcon, Container, Group, SimpleGrid, Skeleton, Title } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
 import { lazy, Suspense } from 'react';
@@ -18,6 +19,8 @@ export async function loader({ params }: { params: Params<string> }) {
 
 export function Component() {
   const { folder } = useLoaderData<typeof loader>();
+
+  useTitle(folder.name ?? '');
 
   return (
     <>
