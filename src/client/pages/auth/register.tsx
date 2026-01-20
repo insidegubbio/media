@@ -67,6 +67,9 @@ export function Component() {
       username: (value) => (value.length < 1 ? 'Username is required' : null),
       password: (value) => (value.length < 1 ? 'Password is required' : null),
     },
+    enhanceGetInputProps: ({ field }) => ({
+      name: field,
+    }),
   });
 
   useEffect(() => {
@@ -214,6 +217,7 @@ export function Component() {
             <TextInput
               size='md'
               placeholder='Enter your username...'
+              autoComplete='username'
               styles={{
                 input: {
                   backgroundColor: config.website.loginBackground ? 'transparent' : undefined,
@@ -225,6 +229,7 @@ export function Component() {
             <PasswordInput
               size='md'
               placeholder='Enter your password...'
+              autoComplete='new-password'
               styles={{
                 input: {
                   backgroundColor: config.website.loginBackground ? 'transparent' : undefined,

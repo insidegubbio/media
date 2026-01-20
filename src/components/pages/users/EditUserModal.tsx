@@ -69,6 +69,9 @@ export default function EditUserModal({
         if (typeof value !== 'number' || value < 0) return 'Invalid value';
       },
     },
+    enhanceGetInputProps: ({ field }) => ({
+      name: field,
+    }),
   });
 
   const onSubmit = async (values: typeof form.values) => {
@@ -165,6 +168,7 @@ export default function EditUserModal({
             <TextInput
               label='Username'
               placeholder='Enter a username...'
+              autoComplete='username'
               {...form.getInputProps('username')}
             />
             <PasswordInput
