@@ -247,8 +247,19 @@ export const schema = z.object({
     }),
     passkeys: z.object({
       enabled: z.boolean().default(false),
-      rpID: z.string().nullable().default(null),
-      origin: z.url().nullable().default(null),
+      rpID: z
+        .string()
+        .trim()
+        .transform((v) => (v.length > 0 ? v : null))
+        .nullable()
+        .default(null),
+      origin: z
+        .string()
+        .trim()
+        .transform((v) => (v.length > 0 ? v : null))
+        .refine((v) => (v ? URL.canParse(v) : true), 'Invalid URL')
+        .nullable()
+        .default(null),
     }),
   }),
   oauth: z.object({

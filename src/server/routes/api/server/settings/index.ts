@@ -294,9 +294,18 @@ export default typedPlugin(
 
             mfaTotpEnabled: z.boolean(),
             mfaTotpIssuer: z.string(),
+
             mfaPasskeysEnabled: z.boolean(),
-            mfaPasskeysRpID: z.string(),
-            mfaPasskeysOrigin: z.string(),
+            mfaPasskeysRpID: z
+              .string()
+              .trim()
+              .transform((v) => (v.length === 0 ? null : v))
+              .nullable(),
+            mfaPasskeysOrigin: z
+              .string()
+              .trim()
+              .transform((v) => (v.length === 0 ? null : v))
+              .nullable(),
 
             ratelimitEnabled: z.boolean(),
             ratelimitMax: z.number().refine((value) => value > 0, 'Value must be greater than 0'),
@@ -413,6 +422,26 @@ export default typedPlugin(
               });
             }
           })
+          .superRefine((data, ctx) => {
+            if (data.mfaPasskeysEnabled) {
+              if (!data.mfaPasskeysRpID || data.mfaPasskeysRpID.length === 0) {
+                ctx.addIssue({
+                  path: ['mfaPasskeysRpID'],
+                  message: 'RP ID is required when passkeys are enabled',
+                  code: 'custom',
+                });
+              }
+
+              if (!data.mfaPasskeysOrigin || data.mfaPasskeysOrigin.length === 0) {
+                ctx.addIssue({
+                  path: ['mfaPasskeysOrigin'],
+                  message: 'Origin is required when passkeys are enabled',
+                  code: 'custom',
+                });
+              }
+            }
+          })
+
           .refine((data) => Object.keys(data).length > 0, {
             message: 'No settings provided to update',
           });
