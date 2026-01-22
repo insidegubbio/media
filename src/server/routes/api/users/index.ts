@@ -18,7 +18,7 @@ export type ApiUsersResponse = User[] | User;
 const logger = log('api').c('users');
 
 const querySchema = z.object({
-  noincl: zQsBoolean,
+  noincl: zQsBoolean.default(false),
 });
 
 export const PATH = '/api/users';
