@@ -4,8 +4,11 @@ import { fetchApi } from '@/lib/fetchApi';
 import useLogin from '@/lib/hooks/useLogin';
 import { useTitle } from '@/lib/hooks/useTitle';
 import {
+  Anchor,
+  Box,
   Button,
   Center,
+  Code,
   Divider,
   Group,
   Image,
@@ -46,6 +49,8 @@ export default function Login() {
 
   const navigate = useNavigate();
 
+  const isHttps = window.location.protocol === 'https:';
+
   const {
     data: config,
     error: configError,
@@ -76,6 +81,8 @@ export default function Login() {
 
   const [passkeyErrored, setPasskeyErrored] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+
+  const [secureModal, setSecureModal] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -265,6 +272,39 @@ export default function Login() {
           </Button>
         </Group>
       </Modal>
+
+      <Modal opened={secureModal} onClose={() => setSecureModal(false)} title='HTTPS Configuration' size='lg'>
+        <Text>
+          It appears that you are accessing this instance through a secure context (HTTPS), but the server is
+          not configured to use HTTPS. This can lead issues when logging in.
+        </Text>
+        <Text mt='md'>
+          To resolve this issue, it is recommended to have your server configured to use HTTPS. This can be
+          done by setting the <Code>CORE_RETURN_HTTPS_URLS</Code> environment variable to <Code>true</Code>{' '}
+          and ensuring that your server has a valid SSL setup through a reverse proxy like Nginx or Caddy.
+        </Text>
+
+        <Text mt='md'>
+          After making these changes, restart the server for the changes to take effect. If you continue to
+          experience issues, please consult the{' '}
+          <Anchor
+            underline='always'
+            href='https://zipline.diced.sh/docs/config/settings#more-about-return-https-urls'
+          >
+            documentation
+          </Anchor>{' '}
+          or seek support.
+        </Text>
+      </Modal>
+
+      {isHttps && !config.returnHttps && (
+        <Box pos='absolute' top={10} left='50%' style={{ transform: 'translateX(-50%)' }}>
+          <Text size='sm' c='red' ta='center'>
+            You are accessing this instance through a secure context but the server is not configured to use
+            HTTPS. Click <Anchor onClick={() => setSecureModal(true)}> here</Anchor> to learn more.
+          </Text>
+        </Box>
+      )}
 
       <Center h='100vh'>
         {config.website.loginBackground && (

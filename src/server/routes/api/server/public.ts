@@ -41,6 +41,7 @@ export type ApiServerPublicResponse = {
   chunks: Config['chunks'];
   firstSetup: boolean;
   domains?: string[];
+  returnHttps: boolean;
 };
 
 export const PATH = '/api/server/public';
@@ -80,6 +81,7 @@ export default typedPlugin(
         chunks: config.chunks,
         firstSetup: zipline.firstSetup,
         domains: config.domains,
+        returnHttps: config.core.returnHttpsUrls,
       };
 
       if (config.features.metrics.adminOnly) {
