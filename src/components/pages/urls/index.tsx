@@ -30,6 +30,7 @@ import {
   IconKey,
   IconLink,
   IconLinkOff,
+  IconLinkPlus,
   IconTextCaption,
 } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -207,11 +208,14 @@ export default function DashboardURLs() {
       <Group>
         <Title>URLs</Title>
 
-        <Tooltip label='Shorten a URL'>
-          <ActionIcon variant='outline' onClick={() => setOpen(true)}>
-            <IconLink size='1rem' />
-          </ActionIcon>
-        </Tooltip>
+        <Button
+          variant='outline'
+          size='compact-sm'
+          leftSection={<IconLinkPlus size='1rem' />}
+          onClick={() => setOpen(true)}
+        >
+          Create
+        </Button>
 
         <GridTableSwitcher type='urls' />
       </Group>
