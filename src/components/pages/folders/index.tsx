@@ -8,7 +8,7 @@ import { Anchor, Breadcrumbs, Button, Group, Modal, Stack, Switch, TextInput, Ti
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconFolderPlus, IconHome, IconPlus } from '@tabler/icons-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useSWR, { mutate } from 'swr';
 import FolderGridView from './views/FolderGridView';
@@ -29,9 +29,11 @@ export default function DashboardFolders() {
 
   const currentFolderId = folderPath.length > 0 ? folderPath[folderPath.length - 1] : null;
 
-  const { data: currentFolder } = useSWR<Folder>(
-    currentFolderId ? `/api/user/folders/${currentFolderId}` : null,
-  );
+  const {
+    data: currentFolder,
+    error: currentFolderError,
+    isLoading,
+  } = useSWR<Folder>(currentFolderId ? `/api/user/folders/${currentFolderId}` : null);
 
   const form = useForm({
     initialValues: {
@@ -105,6 +107,15 @@ export default function DashboardFolders() {
   };
 
   const breadcrumbs = buildBreadcrumbs();
+
+  useEffect(() => {
+    if (!currentFolderId) return;
+    if (isLoading) return;
+
+    if (currentFolderError || !currentFolder) {
+      navigate('/dashboard/folders', { replace: true });
+    }
+  }, [currentFolderId, currentFolder, currentFolderError, isLoading]);
 
   return (
     <>

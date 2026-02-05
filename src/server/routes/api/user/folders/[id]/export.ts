@@ -108,7 +108,9 @@ export default typedPlugin(
         const fileCount = await addFolderToZip(zip, folderTree, '', logger);
 
         if (fileCount === 0) {
-          logger.warn('folder export has no files', { folder: folder.id });
+          logger.warn('folder export has no files, aborting.', { folder: folder.id });
+
+          zip.abort();
         }
 
         zip.on('error', (err) => {
