@@ -12,16 +12,16 @@ export type Folder = PrismaFolder & {
   };
 };
 
-export interface FolderParent {
+export type FolderParent = {
   id: string;
   name: string;
   parentId: string | null;
   parent?: FolderParent | null;
-}
+};
 
-export interface FolderParentPublic extends FolderParent {
+export type FolderParentPublic = {
   public: boolean;
-}
+} & FolderParent;
 
 export async function buildParentChain(parentId: string | null): Promise<FolderParent | null> {
   if (!parentId) return null;
@@ -59,32 +59,28 @@ export async function buildPublicParentChain(parentId: string | null): Promise<F
   };
 }
 
-export function cleanFolder<T extends Record<string, unknown>>(folder: T, stringifyDates = false): T {
+export function cleanFolder(folder: Partial<Folder>, stringifyDates = false): Partial<Folder> {
   if (folder.files && Array.isArray(folder.files)) cleanFiles(folder.files as any, stringifyDates);
 
-  if (folder.createdAt)
-    (folder.createdAt as unknown) = stringifyDates
-      ? (folder.createdAt as Date).toISOString()
-      : folder.createdAt;
-  if (folder.updatedAt)
-    (folder.updatedAt as unknown) = stringifyDates
-      ? (folder.updatedAt as Date).toISOString()
-      : folder.updatedAt;
+  if (stringifyDates) {
+    if (folder.createdAt) (folder.createdAt as unknown) = (folder.createdAt as Date).toISOString();
+    if (folder.updatedAt) (folder.updatedAt as unknown) = (folder.updatedAt as Date).toISOString();
+  }
 
   if (folder.children && Array.isArray(folder.children)) {
     for (const child of folder.children) {
-      cleanFolder(child as Record<string, unknown>, stringifyDates);
+      cleanFolder(child, stringifyDates);
     }
   }
 
   if (folder.parent && typeof folder.parent === 'object') {
-    cleanFolder(folder.parent as Record<string, unknown>, stringifyDates);
+    cleanFolder(folder.parent, stringifyDates);
   }
 
   return folder;
 }
 
-export function cleanFolders<T extends Record<string, unknown>>(folders: T[], stringifyDates = false): T[] {
+export function cleanFolders(folders: Partial<Folder>[], stringifyDates = false): Partial<Folder>[] {
   for (let i = 0; i !== folders.length; ++i) {
     cleanFolder(folders[i], stringifyDates);
   }

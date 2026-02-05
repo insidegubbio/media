@@ -10,15 +10,17 @@ import { IconTrashFilled } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 import { mutate } from 'swr';
 
-interface DeleteFolderModalProps {
+type ChildrenAction = 'moveToRoot' | 'moveToFolder' | 'cascade';
+
+export default function DeleteFolderModal({
+  folder,
+  opened,
+  onClose,
+}: {
   folder: Folder | null;
   opened: boolean;
   onClose: () => void;
-}
-
-type ChildrenAction = 'moveToRoot' | 'moveToFolder' | 'cascade';
-
-export default function DeleteFolderModal({ folder, opened, onClose }: DeleteFolderModalProps) {
+}) {
   const [loading, setLoading] = useState(false);
   const [childrenAction, setChildrenAction] = useState<ChildrenAction>('moveToRoot');
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);

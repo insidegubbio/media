@@ -2,27 +2,15 @@ import GridTableSwitcher from '@/components/GridTableSwitcher';
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
+import { FolderBreadcrumb } from '@/lib/folderHierarchy';
 import { useViewStore } from '@/lib/store/view';
-import {
-  ActionIcon,
-  Anchor,
-  Breadcrumbs,
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Switch,
-  TextInput,
-  Title,
-  Tooltip,
-} from '@mantine/core';
+import { Anchor, Breadcrumbs, Button, Group, Modal, Stack, Switch, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconFolderPlus, IconHome, IconPlus } from '@tabler/icons-react';
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { mutate } from 'swr';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 import FolderGridView from './views/FolderGridView';
 import FolderTableView from './views/FolderTableView';
 
@@ -91,13 +79,12 @@ export default function DashboardFolders() {
   );
 
   const buildBreadcrumbs = () => {
-    const items: { id: string | null; name: string; path: string }[] = [
-      { id: null, name: 'Root', path: '/dashboard/folders' },
-    ];
+    const items: FolderBreadcrumb[] = [{ id: null, name: 'Root', path: '/dashboard/folders' }];
 
     if (currentFolder) {
       const path: Partial<Folder>[] = [];
       let folder: Partial<Folder> | undefined | null = currentFolder;
+
       while (folder) {
         path.unshift(folder);
         folder = folder.parent;
@@ -146,11 +133,14 @@ export default function DashboardFolders() {
       <Group>
         <Title>Folders</Title>
 
-        <Tooltip label={currentFolderId ? 'Create a subfolder' : 'Create a new folder'}>
-          <ActionIcon variant='outline' onClick={() => setOpen(true)}>
-            <IconPlus size='1rem' />
-          </ActionIcon>
-        </Tooltip>
+        <Button
+          variant='outline'
+          size='compact-sm'
+          leftSection={<IconPlus size='1rem' />}
+          onClick={() => setOpen(true)}
+        >
+          Create{currentFolderId ? ' Subfolder' : ' Folder'}
+        </Button>
 
         <GridTableSwitcher type='folders' />
       </Group>
@@ -160,7 +150,7 @@ export default function DashboardFolders() {
           {breadcrumbs.map((item, index) => (
             <Anchor
               key={item.id ?? 'root'}
-              onClick={() => navigate(item.path)}
+              onClick={() => navigate(item.path!)}
               style={{ cursor: 'pointer' }}
               fw={index === breadcrumbs.length - 1 ? 600 : 400}
             >

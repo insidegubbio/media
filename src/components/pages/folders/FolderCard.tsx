@@ -17,11 +17,11 @@ import {
   IconTrashFilled,
 } from '@tabler/icons-react';
 import { useState } from 'react';
-import ViewFilesModal from './ViewFilesModal';
 import { copyFolderUrl, editFolderUploads, editFolderVisibility } from './actions';
-import DeleteFolderModal from './DeleteFolderModal';
-import EditFolderNameModal from './EditFolderNameModal';
-import MoveFolderModal from './MoveFolderModal';
+import DeleteFolderModal from './modals/DeleteFolderModal';
+import EditFolderNameModal from './modals/EditFolderNameModal';
+import MoveFolderModal from './modals/MoveFolderModal';
+import ViewFilesModal from './modals/ViewFilesModal';
 
 export default function FolderCard({
   folder,

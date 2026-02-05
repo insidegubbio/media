@@ -21,10 +21,10 @@ import { DataTable, DataTableSortStatus } from 'mantine-datatable';
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { copyFolderUrl, editFolderUploads, editFolderVisibility } from '../actions';
-import DeleteFolderModal from '../DeleteFolderModal';
-import EditFolderNameModal from '../EditFolderNameModal';
-import MoveFolderModal from '../MoveFolderModal';
-import ViewFilesModal from '../ViewFilesModal';
+import DeleteFolderModal from '../modals/DeleteFolderModal';
+import EditFolderNameModal from '../modals/EditFolderNameModal';
+import MoveFolderModal from '../modals/MoveFolderModal';
+import ViewFilesModal from '../modals/ViewFilesModal';
 
 export default function FolderTableView({
   currentFolderId,

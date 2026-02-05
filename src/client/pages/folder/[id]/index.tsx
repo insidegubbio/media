@@ -1,5 +1,6 @@
 import { type Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
+import { FolderBreadcrumb } from '@/lib/folderHierarchy';
 import {
   ActionIcon,
   Anchor,
@@ -61,7 +62,7 @@ export function Component() {
   const navigate = useNavigate();
 
   const buildBreadcrumbs = () => {
-    const items: { id: string | null; name: string; public: boolean }[] = [];
+    const items: FolderBreadcrumb[] = [];
 
     let current = folder.parent as Partial<Folder> | undefined;
     while (current && current.public) {

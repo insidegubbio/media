@@ -117,9 +117,9 @@ export default function FileModal({
 
   const handleAdd = async (value: string) => {
     if (value === '$create') {
-      createFolderAndAdd(file!, search.trim());
+      await createFolderAndAdd(file!, search.trim());
     } else {
-      addToFolder(file!, value);
+      await addToFolder(file!, value);
     }
   };
 

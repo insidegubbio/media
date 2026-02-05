@@ -10,13 +10,15 @@ import { IconFolderSymlink } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 import { mutate } from 'swr';
 
-interface MoveFolderModalProps {
+export default function MoveFolderModal({
+  folder,
+  opened,
+  onClose,
+}: {
   folder: Folder | null;
   opened: boolean;
   onClose: () => void;
-}
-
-export default function MoveFolderModal({ folder, opened, onClose }: MoveFolderModalProps) {
+}) {
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');

@@ -4,6 +4,7 @@ import { buildParentChain, Folder, cleanFolder } from '@/lib/db/models/folder';
 import { User } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
+import { zStringTrimmed } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import { FastifyReply, FastifyRequest } from 'fastify';
@@ -159,9 +160,9 @@ export default typedPlugin(
         schema: {
           body: z.object({
             isPublic: z.boolean().optional(),
-            name: z.string().min(1).optional(),
+            name: zStringTrimmed.optional(),
             allowUploads: z.boolean().optional(),
-            parentId: z.string().nullable().optional(),
+            parentId: z.string().nullish(),
           }),
           params: paramsSchema,
         },
@@ -245,7 +246,7 @@ export default typedPlugin(
         schema: {
           body: z.object({
             delete: z.enum(['file', 'folder']),
-            id: z.string().min(1).optional(),
+            id: zStringTrimmed.optional(),
             childrenAction: z.enum(['moveToRoot', 'moveToFolder', 'cascade']).optional(),
             targetFolderId: z.string().optional(),
           }),

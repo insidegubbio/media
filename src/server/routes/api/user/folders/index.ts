@@ -24,7 +24,7 @@ export default typedPlugin(
             noincl: zQsBoolean.optional(),
             user: z.string().optional(),
             parentId: z.string().optional(),
-            root: z.string().optional(),
+            root: zQsBoolean.optional(),
           }),
         },
         preHandler: [userMiddleware],
@@ -48,7 +48,7 @@ export default typedPlugin(
         const folders = await prisma.folder.findMany({
           where: {
             userId: user || req.user.id,
-            ...(root !== undefined && { parentId: null }),
+            ...(root && { parentId: null }),
             ...(parentId && { parentId }),
           },
           orderBy: {
@@ -82,7 +82,7 @@ export default typedPlugin(
           },
         });
 
-        return res.send(cleanFolders(folders));
+        return res.send(cleanFolders(folders as unknown as Partial<Folder>[]));
       },
     );
 

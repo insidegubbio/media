@@ -1,21 +1,15 @@
 import { FolderHierarchyItem } from '@/lib/folderHierarchy';
 import { Combobox, Text } from '@mantine/core';
 
-interface FolderComboboxOptionsProps {
-  folderOptions: FolderHierarchyItem[];
-  searchValue: string;
-  additionalOptions?: React.ReactNode;
-}
-
-/**
- * Renders folder options in a Combobox dropdown with proper indentation and tree symbols.
- * Filters folders by search value (case-insensitive path match).
- */
 export default function FolderComboboxOptions({
   folderOptions,
   searchValue,
   additionalOptions,
-}: FolderComboboxOptionsProps) {
+}: {
+  folderOptions: FolderHierarchyItem[];
+  searchValue: string;
+  additionalOptions?: React.ReactNode;
+}) {
   return (
     <Combobox.Options>
       {additionalOptions}

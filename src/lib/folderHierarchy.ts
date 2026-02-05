@@ -1,11 +1,18 @@
 import { Folder } from './db/models/folder';
 
-export interface FolderHierarchyItem {
+export type FolderHierarchyItem = {
   id: string;
   name: string;
   path: string;
   depth: number;
-}
+};
+
+export type FolderBreadcrumb = {
+  id: string | null;
+  name: string;
+  path?: string;
+  public?: boolean;
+};
 
 export function getDescendantIds(folderId: string, folders: Folder[]): Set<string> {
   const descendants = new Set<string>();
@@ -17,17 +24,15 @@ export function getDescendantIds(folderId: string, folders: Folder[]): Set<strin
       }
     }
   };
+
   addDescendants(folderId);
   return descendants;
 }
 
-
 export function buildFolderHierarchy(folders: Folder[], excludeIds?: Set<string>): FolderHierarchyItem[] {
-
   const childrenMap = new Map<string | null, Folder[]>();
 
   for (const folder of folders) {
-
     if (excludeIds?.has(folder.id)) continue;
 
     const parentId = folder.parentId ?? null;
