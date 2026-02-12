@@ -10,6 +10,45 @@ import { IconClipboardCopy, IconExternalLink, IconFileUpload, IconFileXFilled } 
 import { Link } from 'react-router-dom';
 import { handleResponse } from './uploadFiles';
 
+export function progressTracker(size: number) {
+  const alpha = 0.2;
+  let totalBytes = 0;
+  let resSpeed = 0;
+
+  const startTime = Date.now();
+
+  return {
+    update: (loaded: number) => {
+      const now = Date.now();
+      const lastLoaded = totalBytes + loaded;
+
+      const timeDiff = (now - startTime) / 1000;
+
+      // exponential moving average
+      if (timeDiff > 0) {
+        const speed = lastLoaded / timeDiff;
+
+        resSpeed = resSpeed === 0 ? speed : speed * alpha + resSpeed * (1 - alpha);
+      }
+
+      const percent = Math.round((lastLoaded / size) * 100);
+
+      const remainingBytes = size - lastLoaded;
+      const remaining = resSpeed > 0 ? remainingBytes / resSpeed : 0;
+
+      return {
+        percent: Math.min(percent, 99),
+        speed: resSpeed,
+        remaining: Math.max(remaining, 0),
+      };
+    },
+
+    finish: (chunkSize: number) => {
+      totalBytes += chunkSize;
+    },
+  };
+}
+
 export function filesModal(
   files: Response['/api/upload']['files'],
   {
@@ -100,6 +139,10 @@ export async function uploadPartialFiles(
 
   for (let i = 0; i !== files.length; ++i) {
     const file = files[i];
+
+    const tracker = progressTracker(file.size);
+    let lastUpdate = 0;
+
     const nChunks = Math.ceil(file.size / chunkSize);
     const chunks: {
       blob: Blob;
@@ -126,9 +169,7 @@ export async function uploadPartialFiles(
     });
 
     let ready = true;
-    let totalLoaded = 0;
     let identifier: string | undefined;
-    const start = Date.now();
 
     for (let j = 0; j !== nChunks; ++j) {
       while (!ready) {
@@ -140,22 +181,16 @@ export async function uploadPartialFiles(
 
       setLoading(true);
       const req = new XMLHttpRequest();
-      let lastLoaded = 0;
 
       req.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const sent = e.loaded - lastLoaded;
-          lastLoaded = e.loaded;
-          totalLoaded += sent;
+        if (!e.lengthComputable) return;
 
-          const speed = totalLoaded / ((Date.now() - start) / 1000);
-          const remainingTime = (file.size - totalLoaded) / speed;
+        const stats = tracker.update(e.loaded);
 
-          setProgress({
-            percent: Math.round((totalLoaded / file.size) * 100),
-            speed,
-            remaining: remainingTime,
-          });
+        const now = Date.now();
+        if (now - lastUpdate > 250) {
+          setProgress(stats);
+          lastUpdate = now;
         }
       });
 
@@ -236,6 +271,8 @@ export async function uploadPartialFiles(
 
             setTimeout(() => setProgress({ percent: 0, remaining: 0, speed: 0 }), 1000);
           }
+
+          tracker.finish(chunks[j].blob.size);
 
           ready = true;
         },

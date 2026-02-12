@@ -42,6 +42,40 @@ export function handleResponse<R = Response['/api/upload']>(
   }
 }
 
+function progressTracker() {
+  const alpha = 0.2;
+
+  let lastLoaded = 0;
+  let lastTime = Date.now();
+  let resSpeed = 0;
+
+  return (loaded: number, total: number) => {
+    const now = Date.now();
+    const timeDiff = (now - lastTime) / 1000;
+
+    if (timeDiff > 0) {
+      const loadedDiff = loaded - lastLoaded;
+      const speed = loadedDiff / timeDiff;
+
+      // exponential moving average
+      resSpeed = resSpeed === 0 ? speed : speed * alpha + resSpeed * (1 - alpha);
+      lastLoaded = loaded;
+      lastTime = now;
+    }
+
+    const percent = Math.round((loaded / total) * 100);
+
+    const remainingBytes = total - loaded;
+    const remaining = resSpeed > 0 ? remainingBytes / resSpeed : 0;
+
+    return {
+      percent,
+      speed: resSpeed,
+      remaining,
+    };
+  };
+}
+
 export function filesModal(
   files: Response['/api/upload']['files'],
   {
@@ -165,19 +199,20 @@ export function uploadFiles(
     autoClose: false,
   });
 
+  const tracker = progressTracker();
+  let lastUpdate = 0;
+
   const req = new XMLHttpRequest();
-  const start = Date.now();
 
   req.upload.addEventListener('progress', (e) => {
-    if (e.lengthComputable) {
-      const speed = e.loaded / ((Date.now() - start) / 1000);
-      const remainingTime = (e.total - e.loaded) / speed;
+    if (!e.lengthComputable) return;
 
-      setProgress({
-        percent: Math.round((e.loaded / e.total) * 100),
-        speed,
-        remaining: remainingTime,
-      });
+    const stats = tracker(e.loaded, e.total);
+
+    const now = Date.now();
+    if (now - lastUpdate > 250 || e.loaded === e.total) {
+      setProgress(stats);
+      lastUpdate = now;
     }
   });
 
