@@ -46,7 +46,7 @@ export async function userMiddleware(req: FastifyRequest, res: FastifyReply) {
   // conditions met to allow anonymous folder uploads but later handled in the upload route
   const anonFolderUpload =
     req.headers['x-zipline-folder'] &&
-    req.url.toLowerCase().trim() === '/api/upload' &&
+    ['/api/upload', '/api/upload/partial'].includes(req.url.toLowerCase().split('?')[0]) &&
     !req.headers.authorization &&
     !cookies['zipline_session'];
   if (anonFolderUpload) return;
