@@ -130,7 +130,7 @@ async function oauthPlugin(fastify: FastifyInstance) {
           },
         });
 
-        await saveSession(session, user);
+        await saveSession(session, user, false);
 
         logger.info('linked oauth account', {
           provider,
