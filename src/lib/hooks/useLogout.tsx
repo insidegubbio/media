@@ -11,8 +11,8 @@ export function useLogout() {
   const logout = async () => {
     showNotification({
       message: 'Logging out...',
-      color: 'blue',
       icon: <IconLogout size='1rem' />,
+      autoClose: 700,
     });
 
     const res = await fetch('/api/auth/logout');

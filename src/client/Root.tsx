@@ -60,7 +60,7 @@ export default function Root({
           }}
           modals={contextModals}
         >
-          <Notifications zIndex={10000000} />
+          <Notifications position='top-center' zIndex={10000000} />
           <Outlet />
         </ModalsProvider>
       </ThemeProvider>

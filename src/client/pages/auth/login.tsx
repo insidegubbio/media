@@ -27,12 +27,14 @@ import {
   IconBrandDiscordFilled,
   IconBrandGithubFilled,
   IconBrandGoogleFilled,
+  IconCheck,
   IconCircleKeyFilled,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import GenericError from '../../error/GenericError';
+import { showNotification } from '@mantine/notifications';
 
 export default function Login() {
   useTitle('Login');
@@ -111,6 +113,11 @@ export default function Login() {
     } else if (data?.totp) {
       setTotp({ open: true, disabled: false });
     } else {
+      showNotification({
+        message: 'Logging in...',
+        icon: <IconCheck size='1rem' />,
+        autoClose: 700,
+      });
       mutate(data);
     }
   };
