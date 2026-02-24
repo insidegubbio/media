@@ -1,3 +1,4 @@
+import { checkQuota, getDomain, getExtension, getFilename } from '@/lib/api/upload';
 import { bytes } from '@/lib/bytes';
 import { config } from '@/lib/config';
 import { hashPassword } from '@/lib/crypto';
@@ -6,7 +7,6 @@ import { sanitizeFilename } from '@/lib/fs';
 import { log } from '@/lib/logger';
 import { guess } from '@/lib/mimes';
 import { randomCharacters } from '@/lib/random';
-import { formatFileName } from '@/lib/uploader/formatFileName';
 import { UploadHeaders, UploadOptions, parseHeaders } from '@/lib/uploader/parseHeaders';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
@@ -14,11 +14,34 @@ import typedPlugin from '@/server/typedPlugin';
 import { readdir, rename, rm } from 'fs/promises';
 import { join } from 'path';
 import { Worker } from 'worker_threads';
-import { ApiUploadResponse, getExtension } from '.';
+import { ApiUploadResponse } from '.';
 
 const logger = log('api').c('upload').c('partial');
 
-const partialsCache = new Map<string, { length: number; options: UploadOptions }>();
+const partialsCache = new Map<string, { length: number; options: UploadOptions; prefix: string }>();
+
+function createPartial(length: number, options: UploadOptions) {
+  const identifier = randomCharacters(8);
+
+  const prefix = `zipline_partial_${identifier}_`;
+
+  partialsCache.set(identifier, { length, options, prefix });
+  return identifier;
+}
+
+async function deletePartial(identifier: string, deleteFiles = true) {
+  const cache = partialsCache.get(identifier);
+  if (!cache) return;
+
+  partialsCache.delete(identifier);
+
+  if (deleteFiles) {
+    const tempFiles = await readdir(config.core.tempDirectory);
+    await Promise.all(
+      tempFiles.filter((f) => f.startsWith(cache.prefix)).map((f) => rm(join(config.core.tempDirectory, f))),
+    );
+  }
+}
 
 export type ApiUploadPartialResponse = ApiUploadResponse & {
   partialSuccess?: boolean;
@@ -54,41 +77,6 @@ export default typedPlugin(
 
       const files = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
 
-      if (req.user?.quota) {
-        const totalFileSize = files.reduce((acc, x) => acc + x.file.bytesRead, 0);
-
-        const userAggregateStats = await prisma.file.aggregate({
-          where: {
-            userId: req.user.id,
-          },
-          _sum: {
-            size: true,
-          },
-          _count: {
-            _all: true,
-          },
-        });
-        const aggSize: bigint =
-          userAggregateStats!._sum?.size === null
-            ? 0n
-            : (userAggregateStats!._sum?.size as unknown as bigint);
-        if (
-          req.user.quota.filesQuota === 'BY_BYTES' &&
-          Number(aggSize) + totalFileSize > bytes(req.user.quota.maxBytes!)
-        )
-          return res.payloadTooLarge(
-            `uploading will exceed your storage quota of ${bytes(req.user.quota.maxBytes!)} bytes`,
-          );
-
-        if (
-          req.user.quota.filesQuota === 'BY_FILES' &&
-          userAggregateStats!._count?._all + req.files.length > req.user.quota.maxFiles!
-        )
-          return res.payloadTooLarge(
-            `uploading will exceed your file count quota of ${req.user.quota.maxFiles} files`,
-          );
-      }
-
       const response: ApiUploadPartialResponse = {
         files: [],
         ...(options.deletesAt && {
@@ -97,14 +85,7 @@ export default typedPlugin(
         ...(config.files.assumeMimetypes && { assumedMimetypes: Array(req.files.length) }),
       };
 
-      let domain;
-      if (options.overrides?.returnDomain) {
-        domain = `${config.core.returnHttpsUrls ? 'https' : 'http'}://${options.overrides.returnDomain}`;
-      } else if (config.core.defaultDomain) {
-        domain = `${config.core.returnHttpsUrls ? 'https' : 'http'}://${config.core.defaultDomain}`;
-      } else {
-        domain = `${config.core.returnHttpsUrls ? 'https' : 'http'}://${req.headers.host}`;
-      }
+      const domain = getDomain(options.overrides?.returnDomain, config.core.defaultDomain, req.headers.host);
 
       logger.debug('saving partial files', { partial: options.partial, files: files.map((x) => x.filename) });
 
@@ -114,27 +95,26 @@ export default typedPlugin(
 
       // caching for partial uploads server side checks and performance
       if (options.partial.range[0] === 0) {
-        const identifier = randomCharacters(8);
-        partialsCache.set(identifier, { length: fileSize, options });
-        options.partial.identifier = identifier;
+        options.partial.identifier = createPartial(fileSize, options);
       } else {
         if (!options.partial.identifier || !partialsCache.has(options.partial.identifier))
-          return res.badRequest('No partial upload identifier provided');
+          return res.badRequest('No/Invalid partial upload identifier provided');
       }
 
       const cache = partialsCache.get(options.partial.identifier);
-      if (!cache) throw 'No partial upload cache found';
+      if (!cache) return res.badRequest('No/Invalid partial upload identifier provided');
 
-      const prefix = `zipline_partial_${options.partial.identifier}_`;
+      // check quota, using the current added length, and only just adding one file
+      const quotaCheck = await checkQuota(req.user, cache.length + fileSize, 1);
+      if (quotaCheck !== true) {
+        await deletePartial(options.partial.identifier);
+
+        return res.payloadTooLarge(quotaCheck);
+      }
 
       // file is too large so we delete everything
       if (cache.length + fileSize > bytes(config.files.maxFileSize)) {
-        partialsCache.delete(options.partial.identifier);
-
-        const tempFiles = await readdir(config.core.tempDirectory);
-        await Promise.all(
-          tempFiles.filter((f) => f.startsWith(prefix)).map((f) => rm(join(config.core.tempDirectory, f))),
-        );
+        await deletePartial(options.partial.identifier!);
 
         return res.payloadTooLarge('File is too large');
       }
@@ -142,10 +122,12 @@ export default typedPlugin(
       cache.length += fileSize;
 
       // handle partial stuff
-      const tempFile = join(
-        config.core.tempDirectory,
-        `${prefix}${options.partial.range[0]}_${options.partial.range[1]}`,
+      const sanitized = sanitizeFilename(
+        `${cache.prefix}${options.partial.range[0]}_${options.partial.range[1]}`,
       );
+      if (!sanitized) return res.badRequest('Invalid characters in filename');
+
+      const tempFile = join(config.core.tempDirectory, sanitized);
       await rename(file.filepath, tempFile);
 
       if (options.partial.lastchunk) {
@@ -155,32 +137,15 @@ export default typedPlugin(
 
         // determine filename
         const format = options.format || config.files.defaultFormat;
-        let fileName = formatFileName(format, decodeURIComponent(options.partial.filename));
+        const nameResult = await getFilename(
+          format,
+          options.partial.filename,
+          extension,
+          options.overrides?.filename,
+        );
+        if ('error' in nameResult) return res.badRequest(nameResult.error);
 
-        if (options.overrides?.filename || format === 'name') {
-          if (options.overrides?.filename) {
-            const sanitized = sanitizeFilename(options.overrides!.filename!);
-            if (!sanitized) return res.badRequest('Invalid characters in filename override');
-
-            fileName = sanitized;
-          }
-          const fullFileName = `${fileName}${extension}`;
-
-          const existing = await prisma.file.findFirst({
-            where: {
-              name: fullFileName,
-            },
-          });
-          if (existing) return res.badRequest(`A file with the name "${fullFileName}" already exists`);
-        } else if (format === 'random') {
-          let fullFileName = `${fileName}${extension}`;
-          let existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-          while (existing) {
-            fileName = formatFileName(format, decodeURIComponent(options.partial.filename));
-            fullFileName = `${fileName}${extension}`;
-            existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-          }
-        }
+        const { fileName } = nameResult;
 
         // determine mimetype
         let mimetype = options.partial.contentType;
@@ -208,10 +173,12 @@ export default typedPlugin(
         if (options.password) data.password = await hashPassword(options.password);
         if (options.maxViews) data.maxViews = options.maxViews;
         if (folder) data.Folder = { connect: { id: folder.id } };
-        if (options.addOriginalName)
-          data.originalName = options.partial.filename
-            ? decodeURIComponent(options.partial.filename)
-            : file.filename; // this will prolly be "blob" but should hopefully never happen
+        if (options.addOriginalName) {
+          const sanitizedOG = sanitizeFilename(options.partial.filename);
+          if (!sanitizedOG) return res.badRequest('Invalid characters in original filename');
+
+          data.originalName = sanitizedOG || file.filename; // this will prolly be "blob" but should hopefully never happen
+        }
 
         const fileUpload = await prisma.file.create({
           data,
@@ -276,7 +243,7 @@ export default typedPlugin(
           pending: true,
         });
 
-        partialsCache.delete(options.partial.identifier);
+        await deletePartial(options.partial.identifier, false);
       }
 
       response.partialSuccess = true;

@@ -1,3 +1,4 @@
+import { checkQuota, getDomain, getExtension, getFilename, getMimetype } from '@/lib/api/upload';
 import { bytes } from '@/lib/bytes';
 import { compressFile, CompressResult } from '@/lib/compress';
 import { config } from '@/lib/config';
@@ -8,36 +9,12 @@ import { fileSelect } from '@/lib/db/models/file';
 import { sanitizeFilename } from '@/lib/fs';
 import { removeGps } from '@/lib/gps';
 import { log } from '@/lib/logger';
-import { guess } from '@/lib/mimes';
-import { formatFileName } from '@/lib/uploader/formatFileName';
 import { parseHeaders, UploadHeaders } from '@/lib/uploader/parseHeaders';
 import { onUpload } from '@/lib/webhooks';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import { stat } from 'fs/promises';
-import { extname } from 'path';
-
-const commonDoubleExts = [
-  '.tar.gz',
-  '.tar.xz',
-  '.tar.bz2',
-  '.tar.lz',
-  '.tar.lzma',
-  '.tar.Z',
-  '.tar.7z',
-  '.zip.gz',
-  '.zip.xz',
-  '.rar.gz',
-  '.log.gz',
-  '.csv.gz',
-  '.pdf.gz',
-  // feel free to PR more
-];
-
-export const getExtension = (filename: string, override?: string): string => {
-  return override ?? commonDoubleExts.find((ext) => filename.endsWith(ext)) ?? extname(filename);
-};
 
 export type ApiUploadResponse = {
   files: {
@@ -84,40 +61,9 @@ export default typedPlugin(
 
       const files = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
 
-      if (req.user?.quota) {
-        const totalFileSize = files.reduce((acc, x) => acc + x.file.bytesRead, 0);
-
-        const userAggregateStats = await prisma.file.aggregate({
-          where: {
-            userId: req.user.id,
-          },
-          _sum: {
-            size: true,
-          },
-          _count: {
-            _all: true,
-          },
-        });
-        const aggSize: bigint =
-          userAggregateStats!._sum?.size === null
-            ? 0n
-            : (userAggregateStats!._sum?.size as unknown as bigint);
-        if (
-          req.user.quota.filesQuota === 'BY_BYTES' &&
-          Number(aggSize) + totalFileSize > bytes(req.user.quota.maxBytes!)
-        )
-          return res.payloadTooLarge(
-            `uploading will exceed your storage quota of ${bytes(req.user.quota.maxBytes!)} bytes`,
-          );
-
-        if (
-          req.user.quota.filesQuota === 'BY_FILES' &&
-          userAggregateStats!._count?._all + req.files.length > req.user.quota.maxFiles!
-        )
-          return res.payloadTooLarge(
-            `uploading will exceed your file count quota of ${req.user.quota.maxFiles} files`,
-          );
-      }
+      const totalFileSize = files.reduce((acc, x) => acc + x.file.bytesRead, 0);
+      const quotaCheck = await checkQuota(req.user, totalFileSize, files.length);
+      if (quotaCheck !== true) return res.payloadTooLarge(quotaCheck);
 
       const response: ApiUploadResponse = {
         files: [],
@@ -127,14 +73,7 @@ export default typedPlugin(
         ...(config.files.assumeMimetypes && { assumedMimetypes: Array(req.files.length) }),
       };
 
-      let domain;
-      if (options.overrides?.returnDomain) {
-        domain = `${config.core.returnHttpsUrls ? 'https' : 'http'}://${options.overrides.returnDomain}`;
-      } else if (config.core.defaultDomain) {
-        domain = `${config.core.returnHttpsUrls ? 'https' : 'http'}://${config.core.defaultDomain}`;
-      } else {
-        domain = `${config.core.returnHttpsUrls ? 'https' : 'http'}://${req.headers.host}`;
-      }
+      const domain = getDomain(options.overrides?.returnDomain, config.core.defaultDomain, req.headers.host);
 
       logger.debug('uploading files', { files: files.map((x) => x.filename) });
 
@@ -151,36 +90,21 @@ export default typedPlugin(
 
         // determine filename
         const format = options.format || config.files.defaultFormat;
-        let fileName = formatFileName(format, file.filename);
-        if (options.overrides?.filename || format === 'name') {
-          if (options.overrides?.filename) {
-            const sanitized = sanitizeFilename(options.overrides.filename!);
-            if (!sanitized) return res.badRequest(`file[${i}]: Invalid characters in filename override`);
+        const nameResult = await getFilename(format, file.filename, extension, options.overrides?.filename);
+        if ('error' in nameResult) return res.badRequest(`file[${i}]: ${nameResult.error}`);
 
-            fileName = sanitized;
-          }
-
-          const fullFileName = `${fileName}${extension}`;
-          const existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-          if (existing)
-            return res.badRequest(`file[${i}]: A file with the name "${fullFileName}" already exists`);
-        } else if (format === 'random') {
-          let fullFileName = `${fileName}${extension}`;
-          let existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-          while (existing) {
-            fileName = formatFileName(format, file.filename);
-            fullFileName = `${fileName}${extension}`;
-            existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-          }
-        }
+        const { fileName } = nameResult;
 
         // determine mimetype
-        let mimetype = file.mimetype;
-        if (mimetype === 'application/octet-stream' && config.files.assumeMimetypes) {
-          const mime = await guess(extension.substring(1));
+        const { mimetype, assumed } = await getMimetype(file.mimetype, extension);
+        if (!assumed && config.files.assumeMimetypes) {
+          logger.warn(
+            `file[${i}]: mimetype ${file.mimetype} was not recognized, to ignore this warning, turn off assume mimetypes.`,
+          );
 
-          response.assumedMimetypes![i] = !!mime;
-          if (mime) mimetype = mime;
+          return res.badRequest(
+            `file[${i}]: mimetype ${file.mimetype} was not recognized, supply a valid mimetype`,
+          );
         }
 
         // compress the image if requested
@@ -220,7 +144,13 @@ export default typedPlugin(
         if (options.maxViews) data.maxViews = options.maxViews;
         if (options.password) data.password = await hashPassword(options.password);
         if (folder) data.Folder = { connect: { id: folder.id } };
-        if (options.addOriginalName) data.originalName = file.filename;
+        if (options.addOriginalName) {
+          const sanitizedOG = sanitizeFilename(file.filename);
+          if (!sanitizedOG) return res.badRequest(`file[${i}]: Invalid characters in original filename`);
+
+          data.originalName = sanitizedOG;
+        }
+
         data.deletesAt = options.deletesAt && options.deletesAt !== 'never' ? options.deletesAt : null;
 
         const fileUpload = await prisma.file.create({

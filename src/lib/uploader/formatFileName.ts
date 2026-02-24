@@ -15,8 +15,10 @@ export function formatFileName(nameFormat: Config['files']['defaultFormat'], ori
     case 'uuid':
       return randomUUID({ disableEntropyCache: true });
     case 'name':
-      const { name } = parse(originalName!);
+      const sanitized = originalName ? parse(originalName).name : null;
+      if (!sanitized) return null;
 
+      const { name } = parse(sanitized);
       return name;
     case 'random-words':
     case 'gfycat':
