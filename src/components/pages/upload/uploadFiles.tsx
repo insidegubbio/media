@@ -1,7 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { ErrorBody } from '@/lib/response';
 import { UploadOptionsStore } from '@/lib/store/uploadOptions';
-import { ActionIcon, Anchor, Button, Group, Stack, Table, Tooltip } from '@mantine/core';
+import { ActionIcon, Anchor, Button, Group, Stack, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
@@ -105,7 +105,7 @@ export function filesModal(
     title: 'Uploaded files',
     size: 'auto',
     children: (
-      <Table withTableBorder={false} withColumnBorders={false} highlightOnHover horizontalSpacing={'sm'}>
+      <>
         <Stack>
           {files.map((file, idx) => (
             <Group key={idx} justify='space-between'>
@@ -131,7 +131,7 @@ export function filesModal(
         </Stack>
         {files.length > 1 && (
           <Group justify='right'>
-            <Tooltip label='Copy all links to clipboard'>
+            <Tooltip label='Copy all links to clipboard (seperated by a new line)'>
               <Button
                 onClick={() => {
                   clipboard.copy(files.map((file) => file.url).join('\n'));
@@ -154,7 +154,7 @@ export function filesModal(
             </Tooltip>
           </Group>
         )}
-      </Table>
+      </>
     ),
   });
 

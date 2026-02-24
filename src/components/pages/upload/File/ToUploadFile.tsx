@@ -39,7 +39,7 @@ export default function ToUploadFile({
   return (
     <HoverCard shadow='md' position='top'>
       <HoverCard.Target>
-        <Paper withBorder p='md' radius='md' pos='relative'>
+        <Paper withBorder p='md' radius='md' pos='relative' h='100%'>
           <Center h='100%'>
             <Group justify='center' gap='xl'>
               <IconFileUpload size={48} />

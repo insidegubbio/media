@@ -29,6 +29,7 @@ import {
   IconFolderPlus,
   IconKey,
   IconPercentage,
+  IconSettings,
   IconTrashFilled,
   IconWriting,
 } from '@tabler/icons-react';
@@ -466,6 +467,7 @@ export default function UploadOptionsButton({ folder, numFiles }: { folder?: str
         variant={changes() !== 0 ? 'light' : 'outline'}
         rightSection={changes() !== 0 ? <Badge variant='outline'>{changes()}</Badge> : null}
         onClick={() => setOpen(true)}
+        leftSection={<IconSettings size='1rem' />}
       >
         Options
       </Button>

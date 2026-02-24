@@ -18,7 +18,7 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useClipboard, useColorScheme } from '@mantine/hooks';
 import { notifications, showNotification } from '@mantine/notifications';
-import { IconDeviceSdCard, IconFiles, IconUpload, IconX } from '@tabler/icons-react';
+import { IconDeviceSdCard, IconFiles, IconTrashFilled, IconUpload, IconX } from '@tabler/icons-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/shallow';
@@ -223,10 +223,19 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
       </Grid>
 
       <Group justify='right' gap='sm' my='md'>
+        <Button
+          variant='outline'
+          color='red'
+          leftSection={<IconTrashFilled size='1rem' />}
+          disabled={files.length === 0 || dropLoading}
+          onClick={() => setFiles([])}
+        >
+          Clear all
+        </Button>
         <UploadOptionsButton folder={folder} numFiles={files.length} />
         <Button
           variant='outline'
-          leftSection={<IconUpload size={18} />}
+          leftSection={<IconUpload size='1rem' />}
           disabled={files.length === 0 || dropLoading}
           onClick={upload}
         >

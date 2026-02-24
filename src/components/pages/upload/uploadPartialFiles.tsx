@@ -2,7 +2,7 @@ import { useConfig } from '@/components/ConfigProvider';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
 import { UploadOptionsStore } from '@/lib/store/uploadOptions';
-import { ActionIcon, Anchor, Group, Stack, Table, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Anchor, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { hideNotification, notifications } from '@mantine/notifications';
@@ -78,31 +78,29 @@ export function filesModal(
     title: 'Uploaded files',
     size: 'auto',
     children: (
-      <Table withTableBorder={false} withColumnBorders={false} highlightOnHover horizontalSpacing={'sm'}>
-        <Stack>
-          {files.map((file, idx) => (
-            <Group key={idx} justify='space-between'>
-              <Group justify='left'>
-                <Anchor component={Link} to={file.url}>
-                  {file.url}
-                </Anchor>
-              </Group>
-              <Group justify='right'>
-                <Tooltip label='Open link in a new tab'>
-                  <ActionIcon onClick={() => open(idx)} variant='filled' color='primary'>
-                    <IconExternalLink size='1rem' />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label='Copy link to clipboard'>
-                  <ActionIcon onClick={() => copy(idx)} variant='filled' color='primary'>
-                    <IconClipboardCopy size='1rem' />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
+      <Stack>
+        {files.map((file, idx) => (
+          <Group key={idx} justify='space-between'>
+            <Group justify='left'>
+              <Anchor component={Link} to={file.url}>
+                {file.url}
+              </Anchor>
             </Group>
-          ))}
-        </Stack>
-      </Table>
+            <Group justify='right'>
+              <Tooltip label='Open link in a new tab'>
+                <ActionIcon onClick={() => open(idx)} variant='filled' color='primary'>
+                  <IconExternalLink size='1rem' />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label='Copy link to clipboard'>
+                <ActionIcon onClick={() => copy(idx)} variant='filled' color='primary'>
+                  <IconClipboardCopy size='1rem' />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </Group>
+        ))}
+      </Stack>
     ),
   });
 
