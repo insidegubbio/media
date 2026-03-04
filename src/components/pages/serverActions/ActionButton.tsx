@@ -5,13 +5,7 @@ const ICON_SIZE = '1.75rem';
 
 export default function ActionButton({ onClick, Icon }: { onClick: () => void; Icon?: React.FC<any> }) {
   return (
-    <ActionIcon
-      onClick={onClick}
-      variant='filled'
-      radius='md'
-      size='xl'
-      className='zip-click-action-button'
-    >
+    <ActionIcon onClick={onClick} variant='filled' radius='md' size='xl' className='zip-click-action-button'>
       {Icon ? <Icon size={ICON_SIZE} /> : <IconPlayerPlayFilled size={ICON_SIZE} />}
     </ActionIcon>
   );
