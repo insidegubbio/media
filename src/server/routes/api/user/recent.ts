@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { File, cleanFiles, fileSelect } from '@/lib/db/models/file';
+import { File, cleanFiles, fileSchema, fileSelect } from '@/lib/db/models/file';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -13,9 +13,13 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Get the most recently uploaded files for the authenticated user.',
           querystring: z.object({
             take: z.coerce.number().min(1).max(100).default(3),
           }),
+          response: {
+            200: z.array(fileSchema),
+          },
         },
         preHandler: [userMiddleware],
       },

@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { User } from '@/lib/db/models/user';
@@ -27,8 +28,8 @@ const logger = log('api').c('user').c('mfa').c('passkey');
 const passkeysEnabled = (): boolean =>
   isTruthy(config.mfa.passkeys.enabled, config.mfa.passkeys.rpID, config.mfa.passkeys.origin);
 
-export const passkeysEnabledHandler = async (_: FastifyRequest, res: FastifyReply) => {
-  if (!passkeysEnabled()) return res.notFound();
+export const passkeysEnabledHandler = async (_: FastifyRequest, __: FastifyReply) => {
+  if (!passkeysEnabled()) throw new ApiError(9002);
 };
 
 export type PasskeyReg = {
@@ -63,7 +64,13 @@ export default typedPlugin(
 
     server.get(
       PATH + '/options',
-      { preHandler: [userMiddleware, passkeysEnabledHandler], ...secondlyRatelimit(1) },
+      {
+        schema: {
+          description: 'Generate WebAuthn registration options for creating a new passkey.',
+        },
+        preHandler: [userMiddleware, passkeysEnabledHandler],
+        ...secondlyRatelimit(1),
+      },
       async (req, res) => {
         if (OPTIONS_CACHE.has(req.user.id)) return res.send(OPTIONS_CACHE.get(req.user.id)!);
 
@@ -108,8 +115,11 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Register a new WebAuthn passkey for the authenticated user.',
           body: z.object({
-            response: z.custom<RegistrationResponseJSON>(),
+            response: z
+              .custom<RegistrationResponseJSON>()
+              .describe('The registration response from the client, containing the new passkey credential.'),
             name: zStringTrimmed,
           }),
         },
@@ -120,7 +130,7 @@ export default typedPlugin(
         const { response, name } = req.body;
 
         const optionsCached = OPTIONS_CACHE.get(req.user.id);
-        if (!optionsCached) return res.badRequest('passkey registration timed out, try again later');
+        if (!optionsCached) throw new ApiError(1048);
 
         OPTIONS_CACHE.delete(req.user.id);
 
@@ -135,10 +145,10 @@ export default typedPlugin(
         } catch (e) {
           console.error(e);
           logger.warn('error verifying passkey registration');
-          return res.badRequest('Error verifying passkey registration');
+          throw new ApiError(1049);
         }
 
-        if (!verification.verified) return res.badRequest('Could not verify passkey registration');
+        if (!verification.verified) throw new ApiError(1050);
 
         const user = await prisma.user.update({
           where: { id: req.user.id },
@@ -176,6 +186,7 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Remove an existing passkey credential from your account.',
           body: z.object({
             id: z.string(),
           }),

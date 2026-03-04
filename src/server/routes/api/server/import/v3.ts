@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { createToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { export3Schema } from '@/lib/import/version3/validateExport';
@@ -8,13 +9,15 @@ import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
-export type ApiServerImportV3 = {
-  users: Record<string, string>;
-  files: Record<string, string>;
-  folders: Record<string, string>;
-  urls: Record<string, string>;
-  settings: string[];
-};
+export type ApiServerImportV3 = z.infer<typeof serverImportSchema>;
+
+const serverImportSchema = z.object({
+  users: z.record(z.string(), z.string()),
+  files: z.record(z.string(), z.string()),
+  folders: z.record(z.string(), z.string()),
+  urls: z.record(z.string(), z.string()),
+});
+
 const parseDate = (date: string) => (isNaN(Date.parse(date)) ? new Date() : new Date(date));
 
 const logger = log('api').c('server').c('import').c('v3');
@@ -26,10 +29,15 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Import data from a legacy Zipline v3 export file, creating users, files, folders and URLs and returning a mapping of old IDs to new IDs.',
           body: z.object({
             export3: export3Schema.required(),
             importFromUser: z.string().optional(),
           }),
+          response: {
+            200: serverImportSchema,
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
         // 24gb, just in case
@@ -37,7 +45,7 @@ export default typedPlugin(
         ...secondlyRatelimit(5),
       },
       async (req, res) => {
-        if (req.user.role !== 'SUPERADMIN') return res.forbidden('not super admin');
+        if (req.user.role !== 'SUPERADMIN') throw new ApiError(3015);
 
         const { export3 } = req.body;
 
@@ -288,7 +296,7 @@ export default typedPlugin(
           files: filesImportedToId,
           folders: foldersImportedToId,
           urls: urlsImportedToId,
-        });
+        } satisfies ApiServerImportV3);
       },
     );
   },

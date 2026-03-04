@@ -1,27 +1,6 @@
-import type { Folder as PrismaFolder } from '@/prisma/client';
 import { prisma } from '@/lib/db';
-import { File, cleanFiles } from './file';
-
-export type Folder = PrismaFolder & {
-  files?: File[];
-  parent?: Partial<PrismaFolder> | null;
-  children?: Partial<Folder>[];
-  _count?: {
-    children?: number;
-    files?: number;
-  };
-};
-
-export type FolderParent = {
-  id: string;
-  name: string;
-  parentId: string | null;
-  parent?: FolderParent | null;
-};
-
-export type FolderParentPublic = {
-  public: boolean;
-} & FolderParent;
+import { z } from 'zod';
+import { fileSchema, cleanFiles } from './file';
 
 export async function buildParentChain(parentId: string | null): Promise<FolderParent | null> {
   if (!parentId) return null;
@@ -59,7 +38,7 @@ export async function buildPublicParentChain(parentId: string | null): Promise<F
   };
 }
 
-export function cleanFolder(folder: Partial<Folder>, stringifyDates = false): Partial<Folder> {
+export function cleanFolder<T extends Partial<Folder>>(folder: T, stringifyDates = false): T {
   if (folder.files && Array.isArray(folder.files)) cleanFiles(folder.files as any, stringifyDates);
 
   if (stringifyDates) {
@@ -80,10 +59,57 @@ export function cleanFolder(folder: Partial<Folder>, stringifyDates = false): Pa
   return folder;
 }
 
-export function cleanFolders(folders: Partial<Folder>[], stringifyDates = false): Partial<Folder>[] {
+export function cleanFolders<T extends Partial<Folder>>(folders: T[], stringifyDates = false): T[] {
   for (let i = 0; i !== folders.length; ++i) {
     cleanFolder(folders[i], stringifyDates);
   }
 
   return folders;
 }
+
+export const folderSchema = z.object({
+  id: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+
+  name: z.string(),
+  public: z.boolean(),
+  allowUploads: z.boolean(),
+
+  parentId: z.string().nullable(),
+  userId: z.string(),
+
+  files: z.array(fileSchema).optional(),
+  parent: z.any().nullable().optional(),
+  children: z.array(z.any()).optional(),
+  _count: z
+    .object({
+      children: z.number().optional(),
+      files: z.number().optional(),
+    })
+    .optional(),
+});
+
+export type Folder = z.infer<typeof folderSchema>;
+
+export const folderParentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  parentId: z.string().nullable(),
+  get parent() {
+    return folderParentSchema.nullable().optional();
+  },
+});
+
+export const folderParentPublicSchema = z.object({
+  public: z.boolean(),
+  id: z.string(),
+  name: z.string(),
+  parentId: z.string().nullable(),
+  get parent() {
+    return folderParentPublicSchema.nullable().optional();
+  },
+});
+
+export type FolderParent = z.infer<typeof folderParentSchema>;
+export type FolderParentPublic = z.infer<typeof folderParentPublicSchema>;

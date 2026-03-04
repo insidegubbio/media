@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { administratorMiddleware } from '@/server/middleware/administrator';
@@ -18,16 +19,23 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Manually trigger the thumbnails background task, optionally rerunning it for existing files (admin only).',
           body: z.object({
             rerun: z.boolean().default(false),
           }),
+          response: {
+            200: z.object({
+              status: z.string(),
+            }),
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
       },
       async (req, res) => {
         const thumbnailTask = server.tasks.tasks.find((x) => x.id === 'thumbnails');
-        if (!thumbnailTask) return res.notFound('thumbnails task not found');
+        if (!thumbnailTask) throw new ApiError(4011);
 
         thumbnailTask.logger.debug('manually running thumbnails task');
 

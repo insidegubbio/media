@@ -1,6 +1,7 @@
+import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
+import { OAuthProvider, oauthProviderSchema } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
-import { OAuthProvider, OAuthProviderType } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -12,13 +13,35 @@ const logger = log('api').c('auth').c('oauth');
 export const PATH = '/api/auth/oauth';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      return res.send(req.user.oauthProviders);
-    });
+    server.get(
+      PATH,
+      {
+        schema: {
+          description: 'List OAuth providers currently linked to the authenticated user.',
+          response: {
+            200: z.array(oauthProviderSchema),
+          },
+        },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        return res.send(req.user.oauthProviders);
+      },
+    );
 
     server.delete(
       PATH,
-      { schema: { body: z.object({ provider: z.enum(OAuthProviderType) }) }, preHandler: [userMiddleware] },
+      {
+        schema: {
+          description:
+            'Unlink one OAuth provider from the authenticated user, enforcing that at least one login method remains.',
+          body: z.object({ provider: oauthProviderSchema.shape.provider }),
+          response: {
+            200: z.array(oauthProviderSchema),
+          },
+        },
+        preHandler: [userMiddleware],
+      },
       async (req, res) => {
         const { password } = (await prisma.user.findFirst({
           where: {
@@ -29,9 +52,8 @@ export default typedPlugin(
           },
         }))!;
 
-        if (!req.user.oauthProviders.length) return res.badRequest('No providers to delete');
-        if (req.user.oauthProviders.length === 1 && !password)
-          return res.badRequest("You can't delete your last oauth provider without a password");
+        if (!req.user.oauthProviders.length) throw new ApiError(1030);
+        if (req.user.oauthProviders.length === 1 && !password) throw new ApiError(1043);
 
         const { provider } = req.body;
 

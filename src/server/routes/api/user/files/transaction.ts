@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
@@ -39,11 +40,18 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Bulk update files owned by the user: favorite/unfavorite or move them into a folder.',
           body: z.object({
             files: z.array(z.string()).min(1),
             favorite: z.boolean().optional(),
             folder: z.string().optional(),
           }),
+          response: {
+            200: z.object({
+              count: z.number(),
+              name: z.string().optional(),
+            }),
+          },
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(2),
@@ -66,7 +74,7 @@ export default typedPlugin(
             toFavoriteFiles.map((f) => ({ id: f.userId ?? '', role: f.User?.role ?? 'USER' })),
           );
           if (invalids.length > 0)
-            return res.forbidden(`You don't have the permission to modify files[${invalids.join(', ')}]`);
+            throw new ApiError(3014, `You don't have the permission to modify files[${invalids.join(', ')}]`);
 
           const resp = await prisma.file.updateMany({
             where: {
@@ -79,7 +87,7 @@ export default typedPlugin(
             },
           });
 
-          if (resp.count === 0) return res.badRequest('No files were updated.');
+          if (resp.count === 0) throw new ApiError(1028);
 
           logger.info(`${req.user.username} ${favorite ? 'favorited' : 'unfavorited'} ${resp.count} files`, {
             user: req.user.id,
@@ -89,7 +97,7 @@ export default typedPlugin(
           return res.send(resp);
         }
 
-        if (!folder) return res.badRequest("can't PATCH without an action");
+        if (!folder) throw new ApiError(1020);
 
         const f = await prisma.folder.findUnique({
           where: {
@@ -97,7 +105,7 @@ export default typedPlugin(
             userId: req.user.id,
           },
         });
-        if (!f) return res.notFound('folder not found');
+        if (!f) throw new ApiError(4001);
 
         const resp = await prisma.file.updateMany({
           where: {
@@ -112,7 +120,7 @@ export default typedPlugin(
           },
         });
 
-        if (resp.count === 0) return res.notFound('No files were moved.');
+        if (resp.count === 0) throw new ApiError(4006);
 
         logger.info(`${req.user.username} moved ${resp.count} files to ${f.name}`, {
           user: req.user.id,
@@ -130,10 +138,16 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Bulk delete files (and optionally delete the underlying datasource objects).',
           body: z.object({
             files: z.array(z.string()).min(1),
             delete_datasourceFiles: z.boolean().optional(),
           }),
+          response: {
+            200: z.object({
+              count: z.number(),
+            }),
+          },
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(2),
@@ -162,7 +176,7 @@ export default typedPlugin(
           toDeleteFiles.map((f) => ({ id: f.userId ?? '', role: f.User?.role ?? 'USER' })),
         );
         if (invalids.length > 0)
-          return res.forbidden(`You don't have the permission to delete files[${invalids.join(', ')}]`);
+          throw new ApiError(3013, `You don't have the permission to delete files[${invalids.join(', ')}]`);
 
         if (delete_datasourceFiles) {
           for (let i = 0; i !== toDeleteFiles.length; ++i) {
@@ -182,7 +196,7 @@ export default typedPlugin(
           },
         });
 
-        if (resp.count === 0) return res.badRequest('No files were deleted.');
+        if (resp.count === 0) throw new ApiError(1027);
 
         logger.info(`${req.user.username} deleted ${resp.count} files`, {
           user: req.user.id,

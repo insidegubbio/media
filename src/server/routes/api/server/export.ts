@@ -1,4 +1,5 @@
-import { Export4 } from '@/lib/import/version4/validateExport';
+import { ApiError } from '@/lib/api/errors';
+import { Export4, export4Schema } from '@/lib/import/version4/validateExport';
 import { log } from '@/lib/logger';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
@@ -9,7 +10,19 @@ import { cpus, hostname, platform, release } from 'os';
 import z from 'zod';
 import { version } from '../../../../../package.json';
 
-async function getCounts() {
+const exportCountsSchema = z.object({
+  users: z.number(),
+  files: z.number(),
+  urls: z.number(),
+  folders: z.number(),
+  invites: z.number(),
+  thumbnails: z.number(),
+  metrics: z.number(),
+});
+
+type ExportCounts = z.infer<typeof exportCountsSchema>;
+
+async function getCounts(): Promise<ExportCounts> {
   const users = await prisma.user.count();
   const files = await prisma.file.count();
   const urls = await prisma.url.count();
@@ -40,10 +53,18 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Export Zipline server data as a version 4 export bundle or return aggregate counts of core resources.',
           querystring: z.object({
             nometrics: z.string().optional(),
             counts: z.string().optional(),
           }),
+          response: {
+            200: z.union([
+              exportCountsSchema.describe('if ?counts=true'),
+              export4Schema.describe('if ?counts is not true or not there'),
+            ]),
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
@@ -57,10 +78,7 @@ export default typedPlugin(
         logger.debug('exporting server data', { format: '4', requester: req.user.username });
 
         const settingsTable = await prisma.zipline.findFirst();
-        if (!settingsTable)
-          return res.badRequest(
-            'Invalid setup, no settings found. Run the setup process again before exporting data.',
-          );
+        if (!settingsTable) throw new ApiError(1023);
 
         const export4: Export4 = {
           versions: {

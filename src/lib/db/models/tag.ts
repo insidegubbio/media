@@ -1,13 +1,4 @@
-export type Tag = {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  name: string;
-  color: string;
-  files?: {
-    id: string;
-  }[];
-};
+import { z } from 'zod';
 
 export const tagSelect = {
   id: true,
@@ -29,3 +20,20 @@ export const tagSelectNoFiles = {
   name: true,
   color: true,
 };
+
+export const tagSchema = z.object({
+  id: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  name: z.string(),
+  color: z.string(),
+  files: z
+    .array(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .optional(),
+});
+
+export type Tag = z.infer<typeof tagSchema>;

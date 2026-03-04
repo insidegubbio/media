@@ -1,6 +1,7 @@
+import { ApiError } from '@/lib/api/errors';
 import { hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { User, userSelect } from '@/lib/db/models/user';
+import { User, userSchema, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { zStringTrimmed } from '@/lib/validation';
@@ -18,14 +19,30 @@ const logger = log('api').c('user');
 export const PATH = '/api/user';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      return res.send({ user: req.user, token: req.cookies.zipline_token });
-    });
+    server.get(
+      PATH,
+      {
+        schema: {
+          description: 'Get the currently authenticated user and their token.',
+          response: {
+            200: z.object({
+              user: userSchema.optional(),
+              token: z.string().optional(),
+            }),
+          },
+        },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        return res.send({ user: req.user, token: req.cookies.zipline_token });
+      },
+    );
 
     server.patch(
       PATH,
       {
         schema: {
+          description: "Update the current user's profile, credentials, avatar, and view settings.",
           body: z.object({
             username: zStringTrimmed.optional(),
             password: zStringTrimmed.optional(),
@@ -47,6 +64,12 @@ export default typedPlugin(
               .partial()
               .optional(),
           }),
+          response: {
+            200: z.object({
+              user: userSchema.optional(),
+              token: z.string().optional(),
+            }),
+          },
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(1),
@@ -59,7 +82,7 @@ export default typedPlugin(
             },
           });
 
-          if (existing) return res.badRequest('Username already exists');
+          if (existing) throw new ApiError(1038);
         }
 
         const user = await prisma.user.update({

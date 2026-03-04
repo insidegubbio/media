@@ -1,6 +1,6 @@
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
-import { Invite, inviteInviterSelect } from '@/lib/db/models/invite';
+import { Invite, inviteInviterSelect, inviteSchema } from '@/lib/db/models/invite';
 import { log } from '@/lib/logger';
 import { randomCharacters } from '@/lib/random';
 import { secondlyRatelimit } from '@/lib/ratelimits';
@@ -21,6 +21,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Create a new invite code for user registration, optionally limiting uses and expiration (admin only).',
           body: z.object({
             expiresAt: z
               .string()
@@ -28,6 +30,9 @@ export default typedPlugin(
               .transform((val) => parseExpiry(val)),
             maxUses: z.number().min(1).optional(),
           }),
+          response: {
+            200: inviteSchema,
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
@@ -57,15 +62,27 @@ export default typedPlugin(
       },
     );
 
-    server.get(PATH, { preHandler: [userMiddleware, administratorMiddleware] }, async (_, res) => {
-      const invites = await prisma.invite.findMany({
-        include: {
-          inviter: inviteInviterSelect,
+    server.get(
+      PATH,
+      {
+        schema: {
+          description: 'List all existing invite codes and their metadata (admin only).',
+          response: {
+            200: z.array(inviteSchema),
+          },
         },
-      });
+        preHandler: [userMiddleware, administratorMiddleware],
+      },
+      async (_, res) => {
+        const invites = await prisma.invite.findMany({
+          include: {
+            inviter: inviteInviterSelect,
+          },
+        });
 
-      return res.send(invites);
-    });
+        return res.send(invites);
+      },
+    );
   },
   { name: PATH },
 );

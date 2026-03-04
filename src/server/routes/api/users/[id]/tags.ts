@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
 import { Tag, tagSelect } from '@/lib/db/models/tag';
 import { canInteract } from '@/lib/role';
@@ -17,6 +18,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'List tags owned by the specified user, enforcing role-based interaction rules (admin only).',
           params: z.object({
             id: z.string(),
           }),
@@ -32,8 +35,8 @@ export default typedPlugin(
           },
         });
 
-        if (!user) return res.notFound();
-        if (!canInteract(req.user.role, user.role)) return res.notFound();
+        if (!user) throw new ApiError(9002);
+        if (!canInteract(req.user.role, user.role)) throw new ApiError(9002);
 
         const tags = await prisma.tag.findMany({
           where: {

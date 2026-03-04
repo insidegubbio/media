@@ -1,6 +1,7 @@
+import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
 import { fileSelect } from '@/lib/db/models/file';
-import { Folder, cleanFolder, cleanFolders } from '@/lib/db/models/folder';
+import { Folder, cleanFolder, cleanFolders, folderSchema } from '@/lib/db/models/folder';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
@@ -20,12 +21,17 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'List folders for the authenticated user, optionally including files or filtering by parent/root.',
           querystring: z.object({
             noincl: zQsBoolean.optional(),
             user: z.string().optional(),
             parentId: z.string().optional(),
             root: zQsBoolean.optional(),
           }),
+          response: {
+            200: z.array(folderSchema),
+          },
         },
         preHandler: [userMiddleware],
       },
@@ -39,9 +45,9 @@ export default typedPlugin(
             },
           });
 
-          if (!user) return res.notFound();
+          if (!user) throw new ApiError(4009);
           if (req.user.id !== user.id) {
-            if (!canInteract(req.user.role, user.role)) return res.notFound();
+            if (!canInteract(req.user.role, user.role)) throw new ApiError(4009);
           }
         }
 
@@ -82,7 +88,7 @@ export default typedPlugin(
           },
         });
 
-        return res.send(cleanFolders(folders as unknown as Partial<Folder>[]));
+        return res.send(cleanFolders(folders as unknown as Folder[]));
       },
     );
 
@@ -90,12 +96,17 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Create a new folder for the authenticated user, optionally public and/or seeded with files.',
           body: z.object({
             name: z.string().trim().min(1),
             isPublic: z.boolean().optional(),
             files: z.array(z.string()).optional(),
             parentId: z.string().optional(),
           }),
+          response: {
+            200: folderSchema,
+          },
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(2),
@@ -110,9 +121,8 @@ export default typedPlugin(
             select: { id: true, userId: true },
           });
 
-          if (!parentFolder) return res.notFound('Parent folder not found');
-          if (parentFolder.userId !== req.user.id)
-            return res.forbidden('Parent folder does not belong to you');
+          if (!parentFolder) throw new ApiError(4007);
+          if (parentFolder.userId !== req.user.id) throw new ApiError(3003);
         }
 
         if (files) {
@@ -127,7 +137,7 @@ export default typedPlugin(
             },
           });
 
-          if (!filesAdd.length) return res.badRequest('No files found, with given request');
+          if (!filesAdd.length) throw new ApiError(1026);
 
           files = filesAdd.map((f) => f.id);
         }

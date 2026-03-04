@@ -1,7 +1,8 @@
+import { ApiError } from '@/lib/api/errors';
 import { ziplineClientParseSchema } from '@/lib/api/detect';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { User, userSelect } from '@/lib/db/models/user';
+import { User, userSchema, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { verifyTotpCode } from '@/lib/totp';
@@ -24,6 +25,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Authenticate a user, creating a session and optionally requiring a TOTP code when multi-factor auth is enabled.',
           body: z.object({
             username: zStringTrimmed,
             password: zStringTrimmed,
@@ -32,6 +35,12 @@ export default typedPlugin(
           headers: z.object({
             'x-zipline-client': ziplineClientParseSchema.optional(),
           }),
+          response: {
+            200: z.object({
+              user: userSchema.optional(),
+              totp: z.literal(true).optional(),
+            }),
+          },
         },
         ...secondlyRatelimit(2),
       },
@@ -53,8 +62,8 @@ export default typedPlugin(
             token: true,
           },
         });
-        if (!user) return res.badRequest('Invalid username or password');
-        if (!user.password) return res.badRequest('Invalid username or password');
+        if (!user) throw new ApiError(1044);
+        if (!user.password) throw new ApiError(1044);
 
         const valid = await verifyPassword(password, user.password);
         if (!valid) {
@@ -64,7 +73,7 @@ export default typedPlugin(
             ua: req.headers['user-agent'],
           });
 
-          return res.badRequest('Invalid username or password');
+          throw new ApiError(1044);
         }
 
         if (user.totpSecret && code) {
@@ -76,7 +85,7 @@ export default typedPlugin(
               ua: req.headers['user-agent'],
             });
 
-            return res.badRequest('Invalid code');
+            throw new ApiError(1045);
           }
         }
 

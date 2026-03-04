@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { IncompleteFile } from '@/lib/db/models/incompleteFile';
+import { IncompleteFile, incompleteFileSchema } from '@/lib/db/models/incompleteFile';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { userMiddleware } from '@/server/middleware/user';
@@ -13,23 +13,41 @@ const logger = log('api').c('user').c('files').c('incomplete');
 export const PATH = '/api/user/files/incomplete';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const incompleteFiles = await prisma.incompleteFile.findMany({
-        where: {
-          userId: req.user.id,
+    server.get(
+      PATH,
+      {
+        schema: {
+          description: 'List incomplete or still-processing file uploads for the authenticated user.',
+          response: {
+            200: z.array(incompleteFileSchema),
+          },
         },
-      });
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const incompleteFiles = await prisma.incompleteFile.findMany({
+          where: {
+            userId: req.user.id,
+          },
+        });
 
-      return res.send(incompleteFiles);
-    });
+        return res.send(incompleteFiles);
+      },
+    );
 
     server.delete(
       PATH,
       {
         schema: {
+          description: 'Delete one or more incomplete file records owned by the authenticated user.',
           body: z.object({
             id: z.array(z.string()),
           }),
+          response: {
+            200: z.object({
+              count: z.number(),
+            }),
+          },
         },
         preHandler: [userMiddleware],
         ...secondlyRatelimit(1),

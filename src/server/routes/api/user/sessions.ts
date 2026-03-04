@@ -1,6 +1,7 @@
+import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
-import type { UserSession } from '@/prisma/client';
+import { UserSession, userSessionSchema } from '@/lib/db/models/user';
 import { userMiddleware } from '@/server/middleware/user';
 import { getSession } from '@/server/session';
 import typedPlugin from '@/server/typedPlugin';
@@ -15,27 +16,50 @@ const logger = log('api').c('user').c('sessions');
 export const PATH = '/api/user/sessions';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, { preHandler: [userMiddleware] }, async (req, res) => {
-      const currentSession = await getSession(req, res);
+    server.get(
+      PATH,
+      {
+        schema: {
+          description:
+            'List the current browser session and other active sessions for the authenticated user.',
+          response: {
+            200: z.object({
+              current: userSessionSchema,
+              other: z.array(userSessionSchema),
+            }),
+          },
+        },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const currentSession = await getSession(req, res);
 
-      const currentDbSession = req.user.sessions.find((session) => session.id === currentSession.sessionId);
+        const currentDbSession = req.user.sessions.find((session) => session.id === currentSession.sessionId);
 
-      if (!currentDbSession) return res.unauthorized('invalid login session');
+        if (!currentDbSession) throw new ApiError(2000);
 
-      return res.send({
-        current: currentDbSession,
-        other: req.user.sessions.filter((session) => session.id !== currentSession.sessionId),
-      });
-    });
+        return res.send({
+          current: currentDbSession,
+          other: req.user.sessions.filter((session) => session.id !== currentSession.sessionId),
+        });
+      },
+    );
 
     server.delete(
       PATH,
       {
         schema: {
+          description: 'Invalidate one or all other sessions for the authenticated user.',
           body: z.object({
             sessionId: z.string().optional(),
             all: z.boolean().optional(),
           }),
+          response: {
+            200: z.object({
+              current: userSessionSchema,
+              other: z.array(userSessionSchema),
+            }),
+          },
         },
         preHandler: [userMiddleware],
       },
@@ -71,10 +95,8 @@ export default typedPlugin(
           });
         }
 
-        if (req.body.sessionId === currentSession.sessionId)
-          return res.badRequest('Cannot delete current session, use log out instead.');
-        if (!req.user.sessions.find((session) => session.id === req.body.sessionId))
-          return res.badRequest('Session not found in logged in sessions');
+        if (req.body.sessionId === currentSession.sessionId) throw new ApiError(1021);
+        if (!req.user.sessions.find((session) => session.id === req.body.sessionId)) throw new ApiError(1031);
 
         const user = await prisma.user.update({
           where: {

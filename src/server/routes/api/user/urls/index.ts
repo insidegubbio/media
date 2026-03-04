@@ -1,7 +1,8 @@
+import { ApiError } from '@/lib/api/errors';
 import { config } from '@/lib/config';
 import { hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { cleanUrlPasswords, Url } from '@/lib/db/models/url';
+import { cleanUrlPasswords, Url, urlSchema } from '@/lib/db/models/url';
 import { log } from '@/lib/logger';
 import { randomCharacters } from '@/lib/random';
 import { zStringTrimmed } from '@/lib/validation';
@@ -29,6 +30,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Create a new shortened URL for the authenticated user, with optional vanity, password, and max-views settings.',
           body: z.object({
             vanity: zStringTrimmed.max(100).nullish(),
             destination: z.string().min(1),
@@ -43,6 +46,14 @@ export default typedPlugin(
             'x-zipline-domain': z.string().optional(),
             'x-zipline-password': z.string().optional(),
           }),
+          response: {
+            200: z.union([
+              z.string(),
+              urlSchema.omit({ password: true }).extend({
+                url: z.string(),
+              }),
+            ]),
+          },
         },
         preHandler: [userMiddleware, rateLimit],
       },
@@ -56,7 +67,8 @@ export default typedPlugin(
           },
         });
         if (req.user.quota && req.user.quota.maxUrls && countUrls + 1 > req.user.quota.maxUrls)
-          return res.forbidden(
+          throw new ApiError(
+            3012,
             `Shortening this URL would exceed your quota of ${req.user.quota.maxUrls} URLs.`,
           );
 
@@ -73,8 +85,6 @@ export default typedPlugin(
           ? await hashPassword(req.headers['x-zipline-password'])
           : undefined;
 
-        if (!destination) return res.badRequest('Destination is required');
-
         if (vanity) {
           const existingVanity = await prisma.url.findFirst({
             where: {
@@ -82,7 +92,7 @@ export default typedPlugin(
             },
           });
 
-          if (existingVanity) return res.badRequest('Vanity already taken');
+          if (existingVanity) throw new ApiError(1042);
         }
 
         let code, existingCode;
@@ -146,10 +156,14 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'List or search shortened URLs owned by the authenticated user.',
           querystring: z.object({
             searchField: z.enum(['destination', 'vanity', 'code']).default('destination'),
             searchQuery: z.string().min(1).optional(),
           }),
+          response: {
+            200: z.array(urlSchema.omit({ password: true })),
+          },
         },
         preHandler: [userMiddleware],
       },

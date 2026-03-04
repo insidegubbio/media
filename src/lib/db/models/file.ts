@@ -1,31 +1,7 @@
 import { config } from '@/lib/config';
 import { formatRootUrl } from '@/lib/url';
-import { Tag, tagSelectNoFiles } from './tag';
-
-export type File = {
-  createdAt: Date;
-  updatedAt: Date;
-  deletesAt: Date | null;
-  favorite: boolean;
-  id: string;
-  originalName: string | null;
-  name: string;
-  size: number;
-  type: string;
-  views: number;
-  maxViews?: number | null;
-  password?: string | boolean | null;
-  folderId: string | null;
-
-  thumbnail: {
-    path: string;
-  } | null;
-
-  tags?: Tag[];
-
-  url?: string;
-  similarity?: number;
-};
+import { z } from 'zod';
+import { tagSchema, tagSelectNoFiles } from './tag';
 
 export const fileSelect = {
   createdAt: true,
@@ -74,3 +50,32 @@ export function cleanFiles(files: File[], stringifyDates = false) {
 
   return files;
 }
+
+export const fileSchema = z.object({
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  deletesAt: z.date().nullable(),
+  favorite: z.boolean(),
+  id: z.string(),
+  originalName: z.string().nullable(),
+  name: z.string(),
+  size: z.number(),
+  type: z.string(),
+  views: z.number(),
+  maxViews: z.number().nullable().optional(),
+  password: z.union([z.string(), z.boolean()]).nullable().optional(),
+  folderId: z.string().nullable(),
+
+  thumbnail: z
+    .object({
+      path: z.string(),
+    })
+    .nullable(),
+
+  tags: z.array(tagSchema).optional(),
+
+  url: z.string().optional(),
+  similarity: z.number().optional(),
+});
+
+export type File = z.infer<typeof fileSchema>;

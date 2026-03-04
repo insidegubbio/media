@@ -1,6 +1,7 @@
+import { ApiError } from '@/lib/api/errors';
 import { createToken, hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { User, userSelect } from '@/lib/db/models/user';
+import { User, userSchema, userSelect } from '@/lib/db/models/user';
 import { getZipline } from '@/lib/db/models/zipline';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
@@ -18,28 +19,48 @@ const logger = log('api').c('setup');
 export const PATH = '/api/setup';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, async (_, res) => {
-      const { firstSetup } = await getZipline();
-      if (!firstSetup) return res.forbidden();
+    server.get(
+      PATH,
+      {
+        schema: {
+          description: 'Return whether Zipline is in first-time setup mode, used by the initial setup flow.',
+          response: {
+            200: z.object({
+              firstSetup: z.boolean(),
+            }),
+          },
+        },
+      },
+      async (_, res) => {
+        const { firstSetup } = await getZipline();
+        if (!firstSetup) throw new ApiError(9001);
 
-      return res.send({ firstSetup });
-    });
+        return res.send({ firstSetup });
+      },
+    );
 
     server.post(
       PATH,
       {
         schema: {
+          description: 'Perform the first-time setup by creating the initial SUPERADMIN user.',
           body: z.object({
             username: zStringTrimmed,
             password: zStringTrimmed,
           }),
+          response: {
+            200: z.object({
+              firstSetup: z.boolean(),
+              user: userSchema,
+            }),
+          },
         },
         ...secondlyRatelimit(5),
       },
       async (req, res) => {
         const { firstSetup, id } = await getZipline();
 
-        if (!firstSetup) return res.forbidden();
+        if (!firstSetup) throw new ApiError(9001);
 
         logger.info('first setup running');
 

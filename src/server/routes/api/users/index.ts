@@ -1,7 +1,8 @@
+import { ApiError } from '@/lib/api/errors';
 import { config } from '@/lib/config';
 import { createToken, hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { User, userSelect } from '@/lib/db/models/user';
+import { User, userSchema, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { canInteract } from '@/lib/role';
@@ -28,7 +29,12 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'List users in the instance, optionally excluding the current admin from the results (admin only).',
           querystring: querySchema,
+          response: {
+            200: z.array(userSchema),
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
@@ -51,6 +57,7 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Create a new user with the given username, password, avatar, and role (admin only).',
           querystring: querySchema,
           body: z.object({
             username: zStringTrimmed,
@@ -58,6 +65,9 @@ export default typedPlugin(
             avatar: z.string().optional(),
             role: z.enum(Role).default('USER').optional(),
           }),
+          response: {
+            200: userSchema,
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
@@ -70,7 +80,7 @@ export default typedPlugin(
             username,
           },
         });
-        if (existing) return res.badRequest('a user with this username already exists');
+        if (existing) throw new ApiError(1040);
 
         let avatar64 = null;
 
@@ -84,7 +94,7 @@ export default typedPlugin(
           logger.debug('failed to read default avatar', { path: config.website.defaultAvatar });
         }
 
-        if (role && !canInteract(req.user.role, role)) return res.forbidden('You cannot create this role');
+        if (role && !canInteract(req.user.role, role)) throw new ApiError(3008);
 
         const user = await prisma.user.create({
           data: {

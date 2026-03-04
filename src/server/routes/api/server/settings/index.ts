@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { bytes } from '@/lib/bytes';
 import { checkOutput, COMPRESS_TYPES } from '@/lib/compress';
 import { reloadSettings } from '@/lib/config';
@@ -8,6 +9,7 @@ import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { readThemes } from '@/lib/theme/file';
+import { zStringTrimmed } from '@/lib/validation';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -47,8 +49,11 @@ const jsonTransform = (value: any, ctx: z.RefinementCtx) => {
   }
 };
 
-const zMs = z.string().refine((value) => ms(value as StringValue) > 0, 'Value must be greater than 0');
-const zBytes = z.string().refine((value) => bytes(value) > 0, 'Value must be greater than 0');
+const zMs = zStringTrimmed.refine(
+  (value) => ms((value ?? '0') as StringValue) > 0,
+  'Value must be greater than 0',
+);
+const zBytes = zStringTrimmed.refine((value) => bytes(value) > 0, 'Value must be greater than 0');
 
 const zIntervalMs = zMs.refine(
   (value) => ms(value as StringValue) <= MAX_SAFE_TIMEOUT_MS,
@@ -89,6 +94,16 @@ export default typedPlugin(
     server.get(
       PATH,
       {
+        schema: {
+          description:
+            'Fetch the full Zipline server settings row along with a list of configuration keys that were overridden at runtime (admin only).',
+          response: {
+            200: z.object({
+              settings: z.custom<Settings>(),
+              tampered: z.array(z.string()),
+            }),
+          },
+        },
         preHandler: [userMiddleware, administratorMiddleware],
       },
       async (_, res) => {
@@ -101,7 +116,7 @@ export default typedPlugin(
           },
         });
 
-        if (!settings) return res.notFound('no settings table found');
+        if (!settings) throw new ApiError(4010);
 
         return res.send({ settings, tampered: global.__tamperedConfig__ || [] });
       },
@@ -111,14 +126,19 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Partially update Zipline server settings using a validated subset of configuration keys (admin only).',
           body: z.custom<Partial<Settings>>(),
+          response: {
+            200: z.custom<ApiServerSettingsResponse>(),
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
       },
       async (req, res) => {
         const settings = await prisma.zipline.findFirst();
-        if (!settings) return res.notFound('no settings table found');
+        if (!settings) throw new ApiError(4010);
 
         const themes = (await readThemes()).map((x) => x.id);
 
@@ -459,10 +479,7 @@ export default typedPlugin(
             issues: result.error.issues,
           });
 
-          return res.status(400).send({
-            statusCode: 400,
-            issues: result.error.issues,
-          });
+          throw new ApiError(1022).add('issues', result.error.issues);
         }
 
         const newSettings = await prisma.zipline.update({

@@ -4,6 +4,7 @@ import { clearTemp } from '@/lib/server-util/clearTemp';
 import { administratorMiddleware } from '@/server/middleware/administrator';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
+import z from 'zod';
 
 export type ApiServerClearTempResponse = {
   status?: string;
@@ -17,6 +18,15 @@ export default typedPlugin(
     server.delete(
       PATH,
       {
+        schema: {
+          description:
+            'Delete temporary files on the Zipline server and return a short status message (admin only).',
+          response: {
+            200: z.object({
+              status: z.string().optional(),
+            }),
+          },
+        },
         preHandler: [userMiddleware, administratorMiddleware],
         ...secondlyRatelimit(1),
       },

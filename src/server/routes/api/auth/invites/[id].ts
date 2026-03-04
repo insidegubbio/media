@@ -1,5 +1,6 @@
+import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
-import { Invite, inviteInviterSelect } from '@/lib/db/models/invite';
+import { Invite, inviteInviterSelect, inviteSchema } from '@/lib/db/models/invite';
 import { log } from '@/lib/logger';
 import { Prisma } from '@/prisma/client';
 import { administratorMiddleware } from '@/server/middleware/administrator';
@@ -21,7 +22,12 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Fetch a specific invite by ID or code, including information about the inviter (admin only).',
           params: paramsSchema,
+          response: {
+            200: inviteSchema,
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
@@ -36,7 +42,7 @@ export default typedPlugin(
             inviter: inviteInviterSelect,
           },
         });
-        if (!invite) return res.notFound('Invite not found through id or code');
+        if (!invite) throw new ApiError(4005);
 
         return res.send(invite);
       },
@@ -46,7 +52,11 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Delete a specific invite by ID (admin only).',
           params: paramsSchema,
+          response: {
+            200: inviteSchema,
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
       },
@@ -71,11 +81,11 @@ export default typedPlugin(
           return res.send(invite);
         } catch (error) {
           if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-            return res.notFound('Invite not found');
+            throw new ApiError(4004);
           }
 
           logger.error(`Failed to delete invite with id ${id}`, { error });
-          return res.internalServerError('Failed to delete invite');
+          throw new ApiError(6000);
         }
       },
     );

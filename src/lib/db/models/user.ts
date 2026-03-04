@@ -1,27 +1,4 @@
-import { OAuthProvider, UserPasskey, UserQuota, UserSession } from '@/prisma/client';
 import { z } from 'zod';
-
-export type User = {
-  id: string;
-  username: string;
-  createdAt: Date;
-  updatedAt: Date;
-  role: 'USER' | 'ADMIN' | 'SUPERADMIN';
-  view: UserViewSettings;
-
-  sessions: UserSession[];
-
-  oauthProviders: OAuthProvider[];
-
-  totpSecret?: string | null;
-  passkeys?: UserPasskey[];
-
-  quota?: UserQuota | null;
-
-  avatar?: string | null;
-  password?: string | null;
-  token?: string | null;
-};
 
 export const userSelect = {
   id: true,
@@ -37,7 +14,6 @@ export const userSelect = {
   sessions: true,
 };
 
-export type UserViewSettings = z.infer<typeof userViewSchema>;
 export const userViewSchema = z
   .object({
     enabled: z.boolean().nullish(),
@@ -53,3 +29,79 @@ export const userViewSchema = z
     embedSiteName: z.string().nullish(),
   })
   .partial();
+
+export type UserViewSettings = z.infer<typeof userViewSchema>;
+
+export const userSessionSchema = z.object({
+  id: z.string(),
+  createdAt: z.date(),
+  ua: z.string(),
+  client: z.string(),
+  device: z.string(),
+  userId: z.string(),
+});
+
+export type UserSession = z.infer<typeof userSessionSchema>;
+
+export const userQuotaSchema = z.object({
+  id: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  filesQuota: z.enum(['BY_BYTES', 'BY_FILES']),
+  maxBytes: z.string().nullable(),
+  maxFiles: z.number().nullable(),
+  maxUrls: z.number().nullable(),
+  userId: z.string().nullable(),
+});
+
+export type UserQuota = z.infer<typeof userQuotaSchema>;
+
+export const userPasskeySchema = z.object({
+  id: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  lastUsed: z.date().nullable(),
+  name: z.string(),
+  reg: z.any(),
+  userId: z.string(),
+});
+
+export type UserPasskey = z.infer<typeof userPasskeySchema>;
+
+export const oauthProviderSchema = z.object({
+  id: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  userId: z.string(),
+  provider: z.enum(['DISCORD', 'GOOGLE', 'GITHUB', 'OIDC']),
+  username: z.string(),
+  accessToken: z.string(),
+  refreshToken: z.string().nullable(),
+  oauthId: z.string().nullable(),
+});
+
+export type OAuthProvider = z.infer<typeof oauthProviderSchema>;
+export type OAuthProviderType = OAuthProvider['provider'];
+
+export const userSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  role: z.enum(['USER', 'ADMIN', 'SUPERADMIN']),
+  view: userViewSchema,
+
+  sessions: z.array(userSessionSchema),
+  oauthProviders: z.array(oauthProviderSchema),
+
+  totpSecret: z.string().nullable().optional(),
+  passkeys: z.array(userPasskeySchema).optional(),
+
+  quota: userQuotaSchema.nullable().optional(),
+
+  avatar: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+  token: z.string().nullable().optional(),
+});
+
+export type User = z.infer<typeof userSchema>;

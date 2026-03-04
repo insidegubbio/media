@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
@@ -19,12 +20,18 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description: 'Verify the password for a password-protected file by ID or name.',
           body: z.object({
             password: zStringTrimmed,
           }),
           params: z.object({
             id: z.string(),
           }),
+          response: {
+            200: z.object({
+              success: z.boolean(),
+            }),
+          },
         },
         ...secondlyRatelimit(2),
       },
@@ -39,8 +46,8 @@ export default typedPlugin(
             id: true,
           },
         });
-        if (!file) return res.notFound();
-        if (!file.password) return res.notFound();
+        if (!file) throw new ApiError(4000);
+        if (!file.password) throw new ApiError(4000);
 
         const verified = await verifyPassword(req.body.password, file.password);
         if (!verified) {
@@ -50,7 +57,7 @@ export default typedPlugin(
             ua: req.headers['user-agent'],
           });
 
-          return res.forbidden('Incorrect password');
+          throw new ApiError(3005);
         }
         logger.info(`${file.name} was accessed with the correct password`, { ua: req.headers['user-agent'] });
 

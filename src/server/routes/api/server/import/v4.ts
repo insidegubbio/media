@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { createToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { export4Schema } from '@/lib/import/version4/validateExport';
@@ -8,20 +9,22 @@ import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
-export type ApiServerImportV4 = {
-  imported: {
-    users: number;
-    oauthProviders: number;
-    quotas: number;
-    passkeys: number;
-    folders: number;
-    files: number;
-    tags: number;
-    urls: number;
-    invites: number;
-    metrics: number;
-  };
-};
+export type ApiServerImportV4 = z.infer<typeof serverImportSchema>;
+
+const serverImportSchema = z.object({
+  imported: z.object({
+    users: z.number(),
+    oauthProviders: z.number(),
+    quotas: z.number(),
+    passkeys: z.number(),
+    folders: z.number(),
+    files: z.number(),
+    tags: z.number(),
+    urls: z.number(),
+    invites: z.number(),
+    metrics: z.number(),
+  }),
+});
 
 const logger = log('api').c('server').c('import').c('v4');
 
@@ -32,6 +35,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Import data from a Zipline v4 export file, optionally merging into the current user and returning counts of imported records.',
           body: z.object({
             export4: export4Schema.required(),
             config: z.object({
@@ -39,6 +44,9 @@ export default typedPlugin(
               mergeCurrentUser: z.string().nullish().default(null),
             }),
           }),
+          response: {
+            200: serverImportSchema,
+          },
         },
         preHandler: [userMiddleware, administratorMiddleware],
         // 24gb, just in case
@@ -46,7 +54,7 @@ export default typedPlugin(
         ...secondlyRatelimit(5),
       },
       async (req, res) => {
-        if (req.user.role !== 'SUPERADMIN') return res.forbidden('not super admin');
+        if (req.user.role !== 'SUPERADMIN') throw new ApiError(3015);
 
         const { export4, config: importConfig } = req.body;
 

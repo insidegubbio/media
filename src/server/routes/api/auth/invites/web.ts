@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/api/errors';
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { Invite } from '@/lib/db/models/invite';
@@ -18,7 +19,21 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Look up a public invite by code for the web UI, returning basic information about the inviter and usage limits.',
           querystring: z.object({ code: z.string().optional() }),
+          response: {
+            200: z.object({
+              invite: z
+                .object({
+                  code: z.string(),
+                  maxUses: z.number().nullable(),
+                  uses: z.number(),
+                  inviter: z.object({ username: z.string() }),
+                })
+                .nullable(),
+            }),
+          },
         },
         ...secondlyRatelimit(10),
       },
@@ -26,7 +41,7 @@ export default typedPlugin(
         const { code } = req.query;
 
         if (!code) return res.send({ invite: null });
-        if (!config.invites.enabled) return res.notFound();
+        if (!config.invites.enabled) throw new ApiError(9002);
 
         const invite = await prisma.invite.findFirst({
           where: {
@@ -48,7 +63,7 @@ export default typedPlugin(
           (invite.expiresAt && new Date(invite.expiresAt) < new Date()) ||
           (invite.maxUses && invite.uses >= invite.maxUses)
         ) {
-          return res.notFound();
+          throw new ApiError(9002);
         }
 
         delete (invite as any).expiresAt;

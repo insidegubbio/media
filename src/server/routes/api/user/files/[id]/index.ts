@@ -1,8 +1,9 @@
+import { ApiError } from '@/lib/api/errors';
 import { bytes } from '@/lib/bytes';
 import { hashPassword } from '@/lib/crypto';
 import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
-import { File, fileSelect } from '@/lib/db/models/file';
+import { File, fileSchema, fileSelect } from '@/lib/db/models/file';
 import { log } from '@/lib/logger';
 import { canInteract } from '@/lib/role';
 import { zValidatePath } from '@/lib/validation';
@@ -22,35 +23,16 @@ const paramsSchema = z.object({
 export const PATH = '/api/user/files/:id';
 export default typedPlugin(
   async (server) => {
-    server.get(PATH, { schema: { params: paramsSchema }, preHandler: [userMiddleware] }, async (req, res) => {
-      const file = await prisma.file.findFirst({
-        where: {
-          OR: [{ id: req.params.id }, { name: req.params.id }],
-        },
-        select: { User: true, ...fileSelect },
-      });
-      if (!file) return res.notFound();
-
-      if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
-        return res.notFound();
-
-      return res.send(file);
-    });
-
-    server.patch(
+    server.get(
       PATH,
       {
         schema: {
+          description:
+            'Fetch a single file owned by the authenticated user (or another user if permitted) by ID or short name.',
           params: paramsSchema,
-          body: z.object({
-            favorite: z.boolean().optional(),
-            maxViews: z.number().min(0).optional(),
-            password: z.string().nullish(),
-            originalName: z.string().trim().min(1).optional().transform(zValidatePath),
-            type: z.string().min(1).optional(),
-            tags: z.array(z.string()).optional(),
-            name: z.string().trim().min(1).optional().transform(zValidatePath),
-          }),
+          response: {
+            200: fileSchema,
+          },
         },
         preHandler: [userMiddleware],
       },
@@ -61,10 +43,48 @@ export default typedPlugin(
           },
           select: { User: true, ...fileSelect },
         });
-        if (!file) return res.notFound();
+        if (!file) throw new ApiError(4000);
 
         if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
-          return res.notFound();
+          throw new ApiError(4000);
+
+        return res.send(file);
+      },
+    );
+
+    server.patch(
+      PATH,
+      {
+        schema: {
+          description:
+            'Update metadata for a single file, including favorite, name, tags, password, and view limits.',
+          params: paramsSchema,
+          body: z.object({
+            favorite: z.boolean().optional(),
+            maxViews: z.number().min(0).optional(),
+            password: z.string().nullish(),
+            originalName: z.string().trim().min(1).optional().transform(zValidatePath),
+            type: z.string().min(1).optional(),
+            tags: z.array(z.string()).optional(),
+            name: z.string().trim().min(1).optional().transform(zValidatePath),
+          }),
+          response: {
+            200: fileSchema,
+          },
+        },
+        preHandler: [userMiddleware],
+      },
+      async (req, res) => {
+        const file = await prisma.file.findFirst({
+          where: {
+            OR: [{ id: req.params.id }, { name: req.params.id }],
+          },
+          select: { User: true, ...fileSelect },
+        });
+        if (!file) throw new ApiError(4000);
+
+        if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
+          throw new ApiError(4000);
 
         const data: Prisma.FileUpdateInput = {};
 
@@ -94,7 +114,7 @@ export default typedPlugin(
             },
           });
 
-          if (tags.length !== req.body.tags.length) return res.badRequest('invalid tag somewhere');
+          if (tags.length !== req.body.tags.length) throw new ApiError(1032);
 
           data.tags = {
             set: req.body.tags.map((tag) => ({ id: tag })),
@@ -109,8 +129,7 @@ export default typedPlugin(
             },
           });
 
-          if (existingFile && existingFile.id !== file.id)
-            return res.badRequest('File with this name already exists');
+          if (existingFile && existingFile.id !== file.id) throw new ApiError(1014);
 
           data.name = name;
 
@@ -118,7 +137,7 @@ export default typedPlugin(
             await datasource.rename(file.name, data.name);
           } catch (error) {
             logger.error('Failed to rename file in datasource', { error });
-            return res.internalServerError('Failed to rename file in datasource');
+            throw new ApiError(6002);
           }
         }
 
@@ -155,10 +174,10 @@ export default typedPlugin(
             User: true,
           },
         });
-        if (!file) return res.notFound();
+        if (!file) throw new ApiError(4000);
 
         if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
-          return res.notFound();
+          throw new ApiError(4000);
 
         const deletedFile = await prisma.file.delete({
           where: {

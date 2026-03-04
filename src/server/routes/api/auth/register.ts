@@ -1,7 +1,9 @@
+import { ApiError } from '@/lib/api/errors';
+import { ziplineClientParseSchema } from '@/lib/api/detect';
 import { config } from '@/lib/config';
 import { createToken, hashPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-import { User, userSelect } from '@/lib/db/models/user';
+import { User, userSchema, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { getSession, saveSession } from '@/server/session';
@@ -9,7 +11,6 @@ import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 import { ApiLoginResponse } from './login';
 import { zStringTrimmed } from '@/lib/validation';
-import { ziplineClientParseSchema } from '@/lib/api/detect';
 
 export type ApiAuthRegisterResponse = ApiLoginResponse;
 
@@ -22,6 +23,8 @@ export default typedPlugin(
       PATH,
       {
         schema: {
+          description:
+            'Register a new user account and immediately authenticate them, optionally consuming an invite code.',
           body: z.object({
             username: zStringTrimmed,
             password: zStringTrimmed,
@@ -30,6 +33,11 @@ export default typedPlugin(
           headers: z.object({
             'x-zipline-client': ziplineClientParseSchema.optional(),
           }),
+          response: {
+            200: z.object({
+              user: userSchema.optional(),
+            }),
+          },
         },
         ...secondlyRatelimit(5),
       },
@@ -38,16 +46,15 @@ export default typedPlugin(
 
         const { username, password, code } = req.body;
 
-        if (code && !config.invites.enabled) return res.badRequest("Invites aren't enabled");
-        if (!code && !config.features.userRegistration)
-          return res.badRequest('User registration is disabled');
+        if (code && !config.invites.enabled) throw new ApiError(1036);
+        if (!code && !config.features.userRegistration) throw new ApiError(1037);
 
         const oUser = await prisma.user.findUnique({
           where: {
             username,
           },
         });
-        if (oUser) return res.badRequest('Username is taken');
+        if (oUser) throw new ApiError(1039);
 
         if (code) {
           const invite = await prisma.invite.findFirst({
@@ -56,10 +63,9 @@ export default typedPlugin(
             },
           });
 
-          if (!invite) return res.badRequest('Invalid invite code');
-          if (invite.expiresAt && new Date(invite.expiresAt) < new Date())
-            return res.badRequest('Invalid invite code');
-          if (invite.maxUses && invite.uses >= invite.maxUses) return res.badRequest('Invalid invite code');
+          if (!invite) throw new ApiError(1035);
+          if (invite.expiresAt && new Date(invite.expiresAt) < new Date()) throw new ApiError(1035);
+          if (invite.maxUses && invite.uses >= invite.maxUses) throw new ApiError(1035);
 
           await prisma.invite.update({
             where: {
