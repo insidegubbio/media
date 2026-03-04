@@ -34,7 +34,7 @@ export default typedPlugin(
             'Create a new shortened URL for the authenticated user, with optional vanity, password, and max-views settings.',
           body: z.object({
             vanity: zStringTrimmed.max(100).nullish(),
-            destination: z.string().min(1),
+            destination: z.httpUrl().min(1),
             enabled: z.boolean().optional(),
           }),
           headers: z.object({
