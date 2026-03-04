@@ -46,6 +46,7 @@ model Zipline {
   filesRandomWordsNumAdjectives Int      @default(2)
   filesRandomWordsSeparator     String   @default("-")
   filesDefaultCompressionFormat String?  @default("jpg")
+  filesMaxFilesPerUpload        Int      @default(1000)
 
   urlsRoute  String @default("/go")
   urlsLength Int    @default(6)

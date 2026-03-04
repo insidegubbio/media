@@ -37,6 +37,7 @@ export default function Files({
     filesRandomWordsNumAdjectives: number;
     filesRandomWordsSeparator: string;
     filesDefaultCompressionFormat: string;
+    filesMaxFilesPerUpload: number;
   }>({
     initialValues: {
       filesRoute: '/u',
@@ -52,6 +53,7 @@ export default function Files({
       filesRandomWordsNumAdjectives: 3,
       filesRandomWordsSeparator: '-',
       filesDefaultCompressionFormat: 'jpg',
+      filesMaxFilesPerUpload: 1000,
     },
     enhanceGetInputProps: (payload) => ({
       disabled: data?.tampered?.includes(payload.field) || false,
@@ -110,6 +112,7 @@ export default function Files({
       filesRandomWordsNumAdjectives: data.settings.filesRandomWordsNumAdjectives ?? 3,
       filesRandomWordsSeparator: data.settings.filesRandomWordsSeparator ?? '-',
       filesDefaultCompressionFormat: data.settings.filesDefaultCompressionFormat ?? 'jpg',
+      filesMaxFilesPerUpload: data.settings.filesMaxFilesPerUpload ?? 1000,
     });
   }, [data]);
 
@@ -217,6 +220,13 @@ export default function Files({
               { value: 'jxl', label: '.jxl' },
             ]}
             {...form.getInputProps('filesDefaultCompressionFormat')}
+          />
+
+          <NumberInput
+            label='Max Files Per Upload'
+            description='The maximum number of files allowed per upload. Requires a server restart.'
+            min={1}
+            {...form.getInputProps('filesMaxFilesPerUpload')}
           />
         </SimpleGrid>
 

@@ -126,6 +126,7 @@ async function main() {
   await server.register(fastifyMultipart, {
     limits: {
       fileSize: bytes(config.files.maxFileSize),
+      parts: config.files.maxFilesPerUpload,
     },
   });
 

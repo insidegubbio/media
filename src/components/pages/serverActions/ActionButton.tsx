@@ -8,7 +8,6 @@ export default function ActionButton({ onClick, Icon }: { onClick: () => void; I
     <ActionIcon
       onClick={onClick}
       variant='filled'
-      color='blue'
       radius='md'
       size='xl'
       className='zip-click-action-button'
