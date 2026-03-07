@@ -46,7 +46,7 @@ import {
   IconUpload,
   IconUsersGroup,
 } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ConfigProvider from './ConfigProvider';
 import VersionBadge from './VersionBadge';
 import { Link, useLoaderData } from 'react-router-dom';
@@ -167,6 +167,12 @@ export default function Layout() {
   const { user, mutate } = useLogin();
   const { avatar } = useAvatar();
 
+  const [prev, setPrev] = useState(location.pathname);
+  if (prev !== location.pathname) {
+    setPrev(location.pathname);
+    setOpened(false);
+  }
+
   const copyToken = () => {
     modals.openConfirmModal({
       title: 'Copy token?',
@@ -241,6 +247,7 @@ export default function Layout() {
             color={theme.colors.gray[6]}
             mr='xl'
             hiddenFrom='sm'
+            bdrs='md'
           />
 
           {config.website.titleLogo && (
