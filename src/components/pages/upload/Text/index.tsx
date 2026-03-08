@@ -1,5 +1,6 @@
 import { useCodeMap } from '@/components/ConfigProvider';
 import Render from '@/components/render/Render';
+import { bytes } from '@/lib/bytes';
 import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
 import { ActionIcon, Button, Group, Select, Tabs, Textarea, Title } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
@@ -58,6 +59,11 @@ export default function UploadText() {
       }
     },
     [selected, setFile],
+  );
+
+  const aggSize = useCallback(
+    () => files.reduce((acc, file) => acc + new Blob([file.text]).size, 0),
+    [files],
   );
 
   const upload = () => {
@@ -179,7 +185,7 @@ export default function UploadText() {
           disabled={files.some((file) => file.text.length === 0) || loading}
           onClick={upload}
         >
-          Upload
+          Upload {files.length} file{files.length !== 1 && 's'} ({bytes(aggSize())})
         </Button>
       </Group>
     </>

@@ -72,7 +72,7 @@ export default function PendingFilesModal({
   };
 
   return (
-    <Modal opened={modals.pending} onClose={() => setModals('pending', false)}>
+    <Modal opened={modals.pending} onClose={() => setModals('pending', false)} title='Pending Files'>
       <Stack gap='xs'>
         {incompleteFiles?.map((incompleteFile) => (
           <Card key={incompleteFile.id} withBorder>

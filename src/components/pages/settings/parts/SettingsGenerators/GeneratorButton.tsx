@@ -13,7 +13,7 @@ import {
   Text,
 } from '@mantine/core';
 import { IconDownload, IconEyeFilled, IconGlobe, IconPercentage, IconWriting } from '@tabler/icons-react';
-import React, { useReducer, useState } from 'react';
+import { useReducer, useState } from 'react';
 import useSWR from 'swr';
 import { flameshot } from './generators/flameshot';
 import { sharex } from './generators/sharex';

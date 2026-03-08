@@ -384,8 +384,8 @@ export default function FileTable({
         user={id}
       />
 
-      {modals && setModals && modals.table && (
-        <TableEditModal opened={modals.table} onClose={() => setModals('table', false)} />
+      {modals && setModals && (
+        <TableEditModal opened={!!modals.table} onClose={() => setModals('table', false)} />
       )}
 
       <Box>

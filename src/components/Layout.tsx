@@ -401,7 +401,7 @@ export default function Layout() {
 
       <AppShell.Main>
         <ConfigProvider data={loaderData}>
-          <Paper m='lg' withBorder p='xs'>
+          <Paper withBorder m='md' p='xs' radius='md'>
             <Outlet />
           </Paper>
         </ConfigProvider>

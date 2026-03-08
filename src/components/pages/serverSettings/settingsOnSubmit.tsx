@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import { showNotification } from '@mantine/notifications';

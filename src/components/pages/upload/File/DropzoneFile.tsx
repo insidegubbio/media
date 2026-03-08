@@ -14,7 +14,7 @@ import {
 } from '@mantine/core';
 import { IconFileUpload, IconTrashFilled } from '@tabler/icons-react';
 
-export default function ToUploadFile({
+export default function DropzoneFile({
   file,
   onDelete,
   loading,
@@ -43,7 +43,7 @@ export default function ToUploadFile({
           <Center h='100%'>
             <Group justify='center' gap='xl'>
               <IconFileUpload size={48} />
-              <Text size='md'>{file.name}</Text>
+              <Text size='md' ff='monospace'>{file.name}</Text>
             </Group>
           </Center>
         </Paper>

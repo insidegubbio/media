@@ -25,7 +25,7 @@ import { useShallow } from 'zustand/shallow';
 import UploadOptionsButton from '../UploadOptionsButton';
 import { uploadFiles } from '../uploadFiles';
 import { uploadPartialFiles } from '../uploadPartialFiles';
-import ToUploadFile from './ToUploadFile';
+import DropzoneFile from './DropzoneFile';
 
 export default function UploadFile({ title, folder }: { title?: string; folder?: string }) {
   const theme = useMantineTheme();
@@ -213,7 +213,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
       <Grid grow my='sm'>
         {files.map((file, i) => (
           <Grid.Col span={3} key={i}>
-            <ToUploadFile
+            <DropzoneFile
               loading={dropLoading}
               file={file}
               onDelete={() => setFiles(files.filter((_, j) => i !== j))}
@@ -239,7 +239,7 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
           disabled={files.length === 0 || dropLoading}
           onClick={upload}
         >
-          Upload {files.length} files ({bytes(aggSize())})
+          Upload {files.length} file{files.length !== 1 && 's'} ({bytes(aggSize())})
         </Button>
       </Group>
     </>
