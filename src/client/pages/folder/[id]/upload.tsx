@@ -40,7 +40,7 @@ export function Component() {
               {folder.public ? (
                 <>
                   This folder is{' '}
-                  <Anchor component={Link} to={`/folder/${folder.id}`}>
+                  <Anchor component={Link} to={`/folder/${folder.id}`} reloadDocument>
                     public
                   </Anchor>
                   . Anyone with the link can view its contents and upload files.

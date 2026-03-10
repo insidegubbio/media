@@ -100,7 +100,7 @@ export function Component() {
           <Title order={1}>{folder.name}</Title>
 
           {folder.allowUploads && (
-            <Link to={`/folder/${folder.id}/upload`}>
+            <Link to={`/folder/${folder.id}/upload`} reloadDocument>
               <ActionIcon variant='outline'>
                 <IconUpload size='1rem' />
               </ActionIcon>

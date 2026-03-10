@@ -180,7 +180,13 @@ export default function ViewFileId() {
                 file.Folder &&
                 (file.Folder.public ? (
                   <Tooltip label='View folder'>
-                    <Anchor component={Link} ml='sm' to={`/folder/${file.Folder.id}`}>
+                    <Anchor
+                      component={Link}
+                      ml='sm'
+                      to={`/folder/${file.Folder.id}`}
+                      target='_blank'
+                      reloadDocument
+                    >
                       {file.Folder.name}
                     </Anchor>
                   </Tooltip>

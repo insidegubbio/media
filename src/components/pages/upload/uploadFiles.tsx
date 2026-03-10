@@ -110,7 +110,7 @@ export function filesModal(
           {files.map((file, idx) => (
             <Group key={idx} justify='space-between'>
               <Group justify='left'>
-                <Anchor component={Link} to={file.url}>
+                <Anchor component={Link} to={file.url} target='_blank'>
                   {file.url}
                 </Anchor>
               </Group>
