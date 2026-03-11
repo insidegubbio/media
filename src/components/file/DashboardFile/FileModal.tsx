@@ -237,12 +237,7 @@ export default function FileModal({
                   <Title order={4} mt='lg' mb='xs'>
                     Tags
                   </Title>
-                  <Combobox
-                    zIndex={90000}
-                    withinPortal={false}
-                    store={tagsCombobox}
-                    onOptionSubmit={handleValueSelect}
-                  >
+                  <Combobox zIndex={90000} store={tagsCombobox} onOptionSubmit={handleValueSelect}>
                     <Combobox.DropdownTarget>
                       <PillsInput
                         onBlur={() => triggerSave()}
@@ -318,7 +313,7 @@ export default function FileModal({
                     </Button>
                   ) : (
                     <Combobox
-                      withinPortal={false}
+                      zIndex={90000}
                       store={folderCombobox}
                       onOptionSubmit={(value) => handleAdd(value)}
                     >
@@ -349,6 +344,12 @@ export default function FileModal({
                       </Combobox.Target>
 
                       <Combobox.Dropdown>
+                        {folders?.length === 0 && (
+                          <Combobox.Empty>
+                            You have no folders. Start typing to create a new folder for this file.
+                          </Combobox.Empty>
+                        )}
+
                         <FolderComboboxOptions
                           folderOptions={folderOptions}
                           searchValue={search}

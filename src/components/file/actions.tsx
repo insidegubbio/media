@@ -141,14 +141,10 @@ export async function createFolderAndAdd(file: File, folderName: string | null) 
 }
 
 export async function removeFromFolder(file: File) {
-  const { data, error } = await fetchApi<Response['/api/user/files/[id]']>(
-    `/api/user/folders/${file.folderId}`,
-    'DELETE',
-    {
-      delete: 'file',
-      id: file.id,
-    },
-  );
+  const { data, error } = await fetchApi<{ folder: Folder }>(`/api/user/folders/${file.folderId}`, 'DELETE', {
+    delete: 'file',
+    id: file.id,
+  });
 
   if (error) {
     notifications.show({
@@ -160,7 +156,7 @@ export async function removeFromFolder(file: File) {
   } else {
     notifications.show({
       title: 'File removed from folder',
-      message: `${file.name} has been removed from ${data!.name}`,
+      message: `${file.name} has been removed from ${data?.folder.name}`,
       color: 'green',
       icon: <IconFolderMinus size='1rem' />,
     });
