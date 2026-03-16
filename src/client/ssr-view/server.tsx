@@ -22,6 +22,7 @@ import { FastifyRequest } from 'fastify';
 import { renderToString } from 'react-dom/server';
 import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router-dom';
 import { createRoutes } from './routes';
+import { stripHtml } from '@/lib/stripHtml';
 
 export const getFile = async (id: string) =>
   prisma.file.findFirst({
@@ -166,49 +167,53 @@ export async function render(
   const router = createStaticRouter(routes, context);
   const html = renderToString(<StaticRouterProvider context={context} router={router} />);
 
+  const safeFilename = stripHtml(file.name);
+  const safeOriginalName = stripHtml(file.originalName || '');
+  const safeType = stripHtml(file.type || '');
+
   const meta = `
   ${
     user?.view?.embedTitle && user.view.embed
-      ? `<meta property="og:title" content="${
+      ? `<meta property="og:title" content="${stripHtml(
           parseString(user.view.embedTitle, {
             file: file as unknown as File,
             user: user as User,
             ...metrics,
-          }) ?? ''
-        }" />`
+          }) ?? '',
+        )}" />`
       : ''
   }
   ${
     user?.view?.embedDescription && user.view.embed
-      ? `<meta property="og:description" content="${
+      ? `<meta property="og:description" content="${stripHtml(
           parseString(user.view.embedDescription, {
             file: file as unknown as File,
             user: user as User,
             ...metrics,
-          }) ?? ''
-        }" />`
+          }) ?? '',
+        )}" />`
       : ''
   }
   ${
     user?.view?.embedSiteName && user.view.embed
-      ? `<meta property="og:site_name" content="${
+      ? `<meta property="og:site_name" content="${stripHtml(
           parseString(user.view.embedSiteName, {
             file: file as unknown as File,
             user: user as User,
             ...metrics,
-          }) ?? ''
-        }" />`
+          }) ?? '',
+        )}" />`
       : ''
   }
   ${
     user?.view?.embedColor && user.view.embed
-      ? `<meta property="theme-color" content="${
+      ? `<meta property="theme-color" content="${stripHtml(
           parseString(user.view.embedColor, {
             file: file as unknown as File,
             user: user as User,
             ...metrics,
-          }) ?? ''
-        }" />`
+          }) ?? '',
+        )}" />`
       : ''
   }
 
@@ -216,11 +221,11 @@ export async function render(
     file.type?.startsWith('image')
       ? `
     <meta property="og:type" content="image" />
-    <meta property="og:image" itemProp="image" content="${host}/raw/${file.name}" />
-    <meta property="og:url" content="${host}/raw/${file.name}" />
+    <meta property="og:image" itemProp="image" content="${host}/raw/${safeFilename}" />
+    <meta property="og:url" content="${host}/raw/${safeFilename}" />
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:image" content="${host}/raw/${file.name}" />
-    <meta property="twitter:title" content="${file.name}" />
+    <meta property="twitter:image" content="${host}/raw/${safeFilename}" />
+    <meta property="twitter:title" content="${safeFilename}" />
   `
       : ''
   }
@@ -230,7 +235,7 @@ export async function render(
       ? `
     ${file.thumbnail ? `<meta property="og:image" content="${host}/raw/${file.thumbnail.path}" />` : ''}
     <meta property="og:type" content="video.other" />
-    <meta property="og:video:url" content="${host}/raw/${file.name}" />
+    <meta property="og:video:url" content="${host}/raw/${safeFilename}" />
     <meta property="og:video:width" content="1920" />
     <meta property="og:video:height" content="1080" />
   `
@@ -241,18 +246,18 @@ export async function render(
     file.type?.startsWith('audio')
       ? `
     <meta name="twitter:card" content="player" />
-    <meta name="twitter:player" content="${host}/raw/${file.name}" />
-    <meta name="twitter:player:stream" content="${host}/raw/${file.name}" />
-    <meta name="twitter:player:stream:content_type" content="${file.type}" />
-    <meta name="twitter:title" content="${file.name}" />
+    <meta name="twitter:player" content="${host}/raw/${safeFilename}" />
+    <meta name="twitter:player:stream" content="${host}/raw/${safeFilename}" />
+    <meta name="twitter:player:stream:content_type" content="${safeType}" />
+    <meta name="twitter:title" content="${safeFilename}" />
     <meta name="twitter:player:width" content="720" />
     <meta name="twitter:player:height" content="480" />
 
     <meta property="og:type" content="music.song" />
-    <meta property="og:url" content="${host}/raw/${file.name}" />
-    <meta property="og:audio" content="${host}/raw/${file.name}" />
-    <meta property="og:audio:secure_url" content="${host}/raw/${file.name}" />
-    <meta property="og:audio:type" content="${file.type}" />
+    <meta property="og:url" content="${host}/raw/${safeFilename}" />
+    <meta property="og:audio" content="${host}/raw/${safeFilename}" />
+    <meta property="og:audio:secure_url" content="${host}/raw/${safeFilename}" />
+    <meta property="og:audio:type" content="${safeType}" />
   `
       : ''
   }
@@ -260,12 +265,12 @@ export async function render(
   ${
     !file.type?.startsWith('video') && !file.type?.startsWith('image')
       ? `
-    <meta property="og:url" content="${host}/raw/${file.name}" />
+    <meta property="og:url" content="${host}/raw/${safeFilename}" />
   `
       : ''
   }
 
-  <title>${file.originalName ?? file.name}</title>
+  <title>${file.originalName ? safeOriginalName : safeFilename}</title>
 `;
 
   return {
