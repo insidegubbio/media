@@ -1,18 +1,41 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Field = 'name' | 'originalName' | 'tags' | 'type' | 'size' | 'createdAt' | 'favorite' | 'views';
+type Field =
+  | 'name'
+  | 'originalName'
+  | 'tags'
+  | 'type'
+  | 'size'
+  | 'createdAt'
+  | 'favorite'
+  | 'views'
+  | 'anonymous';
 
-export const defaultFields: FieldSettings[] = [
-  { field: 'name', visible: true },
-  { field: 'originalName', visible: false },
-  { field: 'tags', visible: true },
-  { field: 'type', visible: true },
-  { field: 'size', visible: true },
-  { field: 'createdAt', visible: true },
-  { field: 'favorite', visible: true },
-  { field: 'views', visible: true },
+const FIELDS: {
+  property: Field;
+  visible: boolean;
+  title: string;
+}[] = [
+  { property: 'name', visible: true, title: 'Name' },
+  { property: 'originalName', visible: false, title: 'Original Name' },
+  { property: 'tags', visible: true, title: 'Tags' },
+  { property: 'type', visible: true, title: 'Type' },
+  { property: 'size', visible: true, title: 'Size' },
+  { property: 'createdAt', visible: true, title: 'Created At' },
+  { property: 'favorite', visible: true, title: 'Favorite' },
+  { property: 'views', visible: true, title: 'Views' },
+  { property: 'anonymous', visible: false, title: 'Anonymous?' },
 ];
+
+export const defaultFields: FieldSettings[] = FIELDS.map(({ property, visible }) => ({
+  field: property,
+  visible,
+}));
+
+export const NAMES: Record<Field, string> = Object.fromEntries(
+  FIELDS.map(({ property, title }) => [property, title]),
+) as Record<Field, string>;
 
 export type FieldSettings = {
   field: Field;
@@ -53,6 +76,23 @@ export const useFileTableSettingsStore = create<FileTableSettings>()(
     }),
     {
       name: 'zipline-file-table-settings',
+      merge: (persistedState: any, currentState) => {
+        const fields = Object.keys(NAMES);
+        const stored = persistedState.fields?.map((item: any) => item.field) || [];
+
+        const needsUpdate =
+          fields.length !== stored.length || !fields.every((field) => stored.includes(field));
+
+        if (needsUpdate) {
+          return {
+            ...currentState,
+            ...persistedState,
+            fields: currentState.fields,
+          };
+        }
+
+        return { ...currentState, ...persistedState };
+      },
     },
   ),
 );

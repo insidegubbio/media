@@ -48,6 +48,7 @@ import {
   IconTextRecognition,
   IconTrashFilled,
   IconUpload,
+  IconUserQuestion,
 } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 import useSWR, { mutate } from 'swr';
@@ -229,6 +230,7 @@ export default function FileModal({
               {file.originalName && (
                 <FileStat Icon={IconTextRecognition} title='Original Name' value={file.originalName} />
               )}
+              {file.anonymous && <FileStat Icon={IconUserQuestion} title='Anonymous' value='Yes' />}
             </SimpleGrid>
 
             {!reduce && (

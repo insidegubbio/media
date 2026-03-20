@@ -283,6 +283,7 @@ model File {
   maxViews     Int?
   favorite     Boolean @default(false)
   password     String?
+  anonymous    Boolean @default(false)
 
   tags Tag[]
 

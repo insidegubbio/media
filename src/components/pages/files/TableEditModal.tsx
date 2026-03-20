@@ -1,4 +1,4 @@
-import { FieldSettings, useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
+import { FieldSettings, NAMES, useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
 import {
   closestCenter,
   DndContext,
@@ -13,17 +13,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { Button, Checkbox, Group, Modal, Paper, Text } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 import { useShallow } from 'zustand/shallow';
-
-export const NAMES = {
-  name: 'Name',
-  originalName: 'Original Name',
-  tags: 'Tags',
-  type: 'Type',
-  size: 'Size',
-  createdAt: 'Created At',
-  favorite: 'Favorite',
-  views: 'Views',
-};
 
 function SortableTableField({ item }: { item: FieldSettings }) {
   const setVisible = useFileTableSettingsStore((state) => state.setVisible);

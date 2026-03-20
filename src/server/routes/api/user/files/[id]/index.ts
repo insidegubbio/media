@@ -68,6 +68,7 @@ export default typedPlugin(
             type: z.string().min(1).optional(),
             tags: z.array(z.string()).optional(),
             name: z.string().trim().min(1).optional().transform(zValidatePath),
+            anonymous: z.boolean().optional(),
           }),
           response: {
             200: fileSchema,
@@ -93,6 +94,7 @@ export default typedPlugin(
         if (req.body.favorite !== undefined) data.favorite = req.body.favorite;
         if (req.body.originalName !== undefined) data.originalName = req.body.originalName;
         if (req.body.type !== undefined) data.type = req.body.type;
+        if (req.body.anonymous !== undefined) data.anonymous = req.body.anonymous;
 
         if (req.body.maxViews !== undefined) {
           data.maxViews = req.body.maxViews;

@@ -8,7 +8,7 @@ import { Tag } from '@/lib/db/models/tag';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
 import { useFolders } from '@/lib/hooks/useFolders';
 import { useQueryState } from '@/lib/hooks/useQueryState';
-import { useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
+import { NAMES, useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
 import { useSettingsStore } from '@/lib/store/settings';
 import {
   ActionIcon,
@@ -46,7 +46,7 @@ import useSWR from 'swr';
 
 import { UpdateFn } from '@/lib/hooks/useObjectState';
 import { DashboardFilesModals } from '..';
-import TableEditModal, { NAMES } from '../TableEditModal';
+import TableEditModal from '../TableEditModal';
 import { bulkDelete, bulkFavorite } from '../bulk';
 import TagPill from '../tags/TagPill';
 import { useApiPagination } from '../useApiPagination';
@@ -342,6 +342,7 @@ export default function FileTable({
     {
       accessor: 'favorite',
       sortable: true,
+      title: 'Favorite?',
       render: (file: File) => (file.favorite ? <Text c='yellow'>Yes</Text> : 'No'),
     },
     {
@@ -353,6 +354,12 @@ export default function FileTable({
       accessor: 'id',
       hidden: searchField !== 'id' || searchQuery.id.trim() === '',
       filtering: searchField === 'id' && searchQuery.id.trim() !== '',
+    },
+    {
+      accessor: 'anonymous',
+      sortable: true,
+      title: 'Anonymous?',
+      render: (file: File) => (file.anonymous ? <Text c='green'>Yes</Text> : 'No'),
     },
   ];
 

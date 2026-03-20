@@ -197,6 +197,7 @@ export default typedPlugin(
 
             data.originalName = sanitizedOG || file.filename; // this will prolly be "blob" but should hopefully never happen
           }
+          if (!req.user && folder) data.anonymous = true;
 
           const fileUpload = await prisma.file.create({
             data,

@@ -186,6 +186,8 @@ export default typedPlugin(
             User: { connect: { id: req.user ? req.user.id : options.folder ? folder?.userId : undefined } },
           };
 
+          if (!req.user && folder) data.anonymous = true;
+
           if (options.maxViews) data.maxViews = options.maxViews;
           if (options.password) data.password = await hashPassword(options.password);
           if (folder) data.Folder = { connect: { id: folder.id } };
