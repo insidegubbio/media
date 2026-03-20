@@ -142,14 +142,18 @@ export default typedPlugin(
 
           // determine mimetype
           const { mimetype, assumed } = await getMimetype(file.mimetype, extension);
-          if (!assumed && config.files.assumeMimetypes) {
-            logger.warn(
-              `file[${i}]: mimetype ${file.mimetype} was not recognized, to ignore this warning, turn off assume mimetypes.`,
-            );
-            throw new ApiError(
-              1010,
-              `file[${i}]: mimetype ${file.mimetype} was not recognized, supply a valid mimetype`,
-            );
+
+          if (config.files.assumeMimetypes) {
+            response.assumedMimetypes![i] = assumed;
+
+            if (!assumed) {
+              logger.warn(`file[${i}]: mimetype ${file.mimetype} was not recognized`);
+
+              throw new ApiError(
+                1010,
+                `file[${i}]: mimetype ${file.mimetype} was not recognized, supply a valid mimetype`,
+              );
+            }
           }
 
           // compress the image if requested
