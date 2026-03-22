@@ -2,6 +2,7 @@ import { Response } from '@/lib/api/response';
 import { Invite } from '@/lib/db/models/invite';
 import { fetchApi } from '@/lib/fetchApi';
 import { conditionalWarning } from '@/lib/warningModal';
+import { getDomain } from '@/lib/webDomain';
 import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
@@ -18,13 +19,14 @@ export async function deleteInvite(warnDeletion: boolean, invite: Invite) {
 }
 
 export function copyInviteUrl(invite: Invite, clipboard: ReturnType<typeof useClipboard>) {
-  clipboard.copy(`${window.location.protocol}//${window.location.host}/invite/${invite.code}`);
+  const url = getDomain(`/invite/${invite.code}`);
+  clipboard.copy(url);
 
   notifications.show({
     title: 'Copied link',
     message: (
       <Anchor component={Link} to={`/invite/${invite.code}`}>
-        {`${window.location.protocol}//${window.location.host}/invite/${invite.code}`}
+        {url}
       </Anchor>
     ),
     color: 'green',

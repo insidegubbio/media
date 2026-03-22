@@ -8,21 +8,25 @@ export type SettingsStore = {
     theme: string;
     themeDark: string;
     themeLight: string;
+    domain: '' | string;
   };
 
   update: <K extends keyof SettingsStore['settings']>(key: K, value: SettingsStore['settings'][K]) => void;
 };
 
+const defaultSettings: SettingsStore['settings'] = {
+  disableMediaPreview: false,
+  warnDeletion: true,
+  theme: 'builtin:dark_blue',
+  themeDark: 'builtin:dark_blue',
+  themeLight: 'builtin:light_blue',
+  domain: '',
+};
+
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
-      settings: {
-        disableMediaPreview: false,
-        warnDeletion: true,
-        theme: 'builtin:dark_blue',
-        themeDark: 'builtin:dark_blue',
-        themeLight: 'builtin:light_blue',
-      },
+      settings: defaultSettings,
 
       update: (key, value) =>
         set((state) => ({
@@ -34,6 +38,18 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'zipline-settings',
+      merge: (persistedState, currentState) => {
+        const typedPersisted = persistedState as SettingsStore | undefined;
+
+        return {
+          ...currentState,
+          ...typedPersisted,
+          settings: {
+            ...currentState.settings,
+            ...(typedPersisted?.settings || {}),
+          },
+        };
+      },
     },
   ),
 );

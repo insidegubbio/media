@@ -1,6 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
+import { getDomain } from '@/lib/webDomain';
 import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
@@ -9,13 +10,14 @@ import { Link } from 'react-router-dom';
 import { mutate } from 'swr';
 
 export function copyFolderUrl(folder: Folder, clipboard: ReturnType<typeof useClipboard>) {
-  clipboard.copy(`${window.location.protocol}//${window.location.host}/folder/${folder.id}`);
+  const url = getDomain(`/folder/${folder.id}`);
+  clipboard.copy(url);
 
   notifications.show({
     title: 'Copied link',
     message: (
       <Anchor component={Link} to={`/folder/${folder.id}`}>
-        {`${window.location.protocol}//${window.location.host}/folder/${folder.id}`}
+        {url}
       </Anchor>
     ),
     color: 'green',

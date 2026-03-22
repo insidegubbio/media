@@ -1,3 +1,4 @@
+import DomainSelect from '@/components/DomainSelect';
 import { useThemes } from '@/components/ThemeProvider';
 import { useSettingsStore } from '@/lib/store/settings';
 import { Group, Paper, Select, Stack, Switch, Text, Title } from '@mantine/core';
@@ -51,6 +52,13 @@ export default function SettingsDashboard() {
             onChange={(event) => update('warnDeletion', event.currentTarget.checked)}
           />
         </Group>
+
+        <DomainSelect
+          label='Default Domain'
+          description='Set the default domain used for copied links anywhere in the dashboard. Leave blank or select "Default domain" to use the current domain that serves the dashboard.'
+          value={settings.domain}
+          onChange={(value) => update('domain', value ?? '')}
+        />
 
         <Select
           label='Theme'

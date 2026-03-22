@@ -4,6 +4,7 @@ import type { File } from '@/lib/db/models/file';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
 import { conditionalWarning } from '@/lib/warningModal';
+import { getDomain } from '@/lib/webDomain';
 import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
@@ -29,13 +30,11 @@ export function downloadFile(file: File) {
 }
 
 export function copyFile(file: File, clipboard: ReturnType<typeof useClipboard>, raw: boolean = false) {
-  const domain = `${window.location.protocol}//${window.location.host}`;
-
   const url = raw
-    ? `${domain}/raw/${file.name}`
+    ? getDomain(`/raw/${file.name}`)
     : file.url
-      ? `${domain}${file.url}`
-      : `${domain}/view/${file.name}`;
+      ? getDomain(`${file.url}`)
+      : getDomain(`/view/${file.name}`);
 
   clipboard.copy(url);
 
