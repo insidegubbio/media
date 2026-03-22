@@ -136,6 +136,8 @@ export default function DashboardFileType({
   }, [dbFile, file, password]);
 
   useEffect(() => {
+    if (!open) return;
+
     if (code) {
       setType('text');
       getText();
@@ -144,7 +146,7 @@ export default function DashboardFileType({
     } else {
       return;
     }
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     if (open) {
