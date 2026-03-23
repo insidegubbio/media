@@ -50,7 +50,7 @@ export async function editFolderVisibility(folder: Folder, isPublic: boolean) {
     });
   }
 
-  mutateFolder(folder.id);
+  mutateFolder();
 }
 
 export async function editFolderUploads(folder: Folder, allowUploads: boolean) {
@@ -78,7 +78,7 @@ export async function editFolderUploads(folder: Folder, allowUploads: boolean) {
     });
   }
 
-  mutateFolder(folder.id);
+  mutateFolder();
 }
 
 export async function mutateFolder(folderId?: string) {
