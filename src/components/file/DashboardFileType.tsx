@@ -11,13 +11,24 @@ import {
   Text,
 } from '@mantine/core';
 import { Icon, IconFileUnknown, IconPlayerPlay, IconShieldLockFilled } from '@tabler/icons-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { renderMode } from '../pages/upload/renderMode';
 import Asciinema from '../render/Asciinema';
 import Pdf from '../render/Pdf';
 import Render from '../render/Render';
 import fileIcon from './fileIcon';
 import { useUserStore } from '@/lib/store/user';
+
+const MAX_BYTES = 1 * 1024 * 1024;
+const FILE_BIG = '\n...\nThe file is too big to display click the download icon to view/download it.';
+
+function appendPassword(url: string, password?: string | null) {
+  return `${url}${password ? `?pw=${encodeURIComponent(password)}` : ''}`;
+}
+
+function isDbFile(file: DbFile | File): file is DbFile {
+  return typeof globalThis.File !== 'undefined' ? !(file instanceof globalThis.File) : 'thumbnail' in file;
+}
 
 function PlaceholderContent({ text, Icon }: { text: string; Icon: Icon }) {
   return (
@@ -82,16 +93,37 @@ export default function DashboardFileType({
 }) {
   const user = useUserStore((state) => state.user);
   const disableMediaPreview = useSettingsStore((state) => state.settings.disableMediaPreview);
-  const fileRoute = user ? `/api/user/files/${(file as DbFile).id}/raw` : `/raw/${file.name}`;
-  const thumbnailRoute = user
-    ? `/api/user/files/${(file as DbFile).thumbnail?.path}/raw`
-    : `/raw/${(file as DbFile).thumbnail?.path}`;
-  const dbFile = 'id' in file;
-  const renderIn = useMemo(() => renderMode(file.name.split('.').pop() || ''), [file.name]);
+  const dbFile = isDbFile(file);
+
+  const fileRoute = dbFile ? (user ? `/api/user/files/${file.id}/raw` : `/raw/${file.name}`) : '';
+
+  const thumbnailRoute = dbFile
+    ? file.thumbnail?.path
+      ? user
+        ? `/api/user/files/${file.thumbnail.path}/raw`
+        : `/raw/${file.thumbnail.path}`
+      : null
+    : null;
+
+  const dbFileUrl = dbFile ? appendPassword(fileRoute, password) : '';
+  const [blobUrl, setBlobUrl] = useState('');
+
+  useEffect(() => {
+    if (dbFile) return setBlobUrl('');
+
+    const objectUrl = URL.createObjectURL(file);
+    setBlobUrl(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [dbFile, file]);
+
+  const fileUrl = dbFile ? dbFileUrl : blobUrl;
+
+  const extension = file.name.split('.').pop() || '';
+  const renderIn = renderMode(extension);
+  const type = code ? 'text' : file.type.split('/')[0];
 
   const [fileContent, setFileContent] = useState('');
-  const [type, setType] = useState(file.type.split('/')[0]);
-
   const [open, setOpen] = useState(false);
 
   const getText = useCallback(async () => {
@@ -99,54 +131,41 @@ export default function DashboardFileType({
       if (!dbFile) {
         const reader = new FileReader();
         reader.onload = () => {
-          if ((reader.result! as string).length > 1 * 1024 * 1024) {
-            setFileContent(
-              reader.result!.slice(0, 1 * 1024 * 1024) +
-                '\n...\nThe file is too big to display click the download icon to view/download it.',
-            );
+          const content = reader.result as string;
+          if (content.length > MAX_BYTES) {
+            setFileContent(content.slice(0, MAX_BYTES) + FILE_BIG);
           } else {
-            setFileContent(reader.result as string);
+            setFileContent(content);
           }
         };
         reader.readAsText(file);
         return;
       }
 
-      if (file.size > 1 * 1024 * 1024) {
-        const res = await fetch(`${fileRoute}${password ? `?pw=${password}` : ''}`, {
+      if (file.size > MAX_BYTES) {
+        const res = await fetch(fileUrl, {
           headers: {
-            Range: 'bytes=0-' + 1 * 1024 * 1024, // 0 mb to 1 mb
+            Range: `bytes=0-${MAX_BYTES}`,
           },
         });
         if (!res.ok) throw new Error('Failed to fetch file');
         const text = await res.text();
-        setFileContent(
-          text + '\n...\nThe file is too big to display click the download icon to view/download it.',
-        );
+        setFileContent(text + FILE_BIG);
         return;
       }
 
-      const res = await fetch(`${fileRoute}${password ? `?pw=${password}` : ''}`);
+      const res = await fetch(fileUrl);
       if (!res.ok) throw new Error('Failed to fetch file');
       const text = await res.text();
       setFileContent(text);
     } catch {
       setFileContent('Error loading file.');
     }
-  }, [dbFile, file, password]);
+  }, [dbFile, file, fileUrl]);
 
   useEffect(() => {
-    if (!open) return;
-
-    if (code) {
-      setType('text');
-      getText();
-    } else if (type === 'text') {
-      getText();
-    } else {
-      return;
-    }
-  }, [open]);
+    if (type === 'text') getText();
+  }, [type, getText]);
 
   useEffect(() => {
     if (open) {
@@ -154,6 +173,10 @@ export default function DashboardFileType({
     } else {
       document.body.style.overflow = 'auto';
     }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
   }, [open]);
 
   if (disableMediaPreview && !show)
@@ -177,16 +200,17 @@ export default function DashboardFileType({
 
   switch (true) {
     case type === 'video':
+      if (!fileUrl) return <Loader />;
       return show ? (
         <video
           width='100%'
           autoPlay
           muted
           controls
-          src={dbFile ? `${fileRoute}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
+          src={fileUrl}
           style={{ cursor: 'pointer', maxWidth: '85vw', maxHeight: '85vh' }}
         />
-      ) : (file as DbFile).thumbnail && dbFile ? (
+      ) : thumbnailRoute ? (
         <Box pos='relative'>
           <MantineImage src={thumbnailRoute} alt={file.name || 'Video thumbnail'} />
 
@@ -211,22 +235,23 @@ export default function DashboardFileType({
       );
 
     case type === 'image':
+      if (!fileUrl) return <Loader />;
       return show ? (
         <Center>
           <MantineImage
-            src={dbFile ? `${fileRoute}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
+            src={fileUrl}
             alt={file.name || 'Image'}
             style={{
               cursor: allowZoom ? 'zoom-in' : 'default',
               maxWidth: '70vw',
               maxHeight: '70vw',
             }}
-            onClick={() => setOpen(true)}
+            onClick={() => allowZoom && setOpen(true)}
           />
           {allowZoom && open && (
             <FileZoomModal setOpen={setOpen}>
               <MantineImage
-                src={dbFile ? `${fileRoute}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
+                src={fileUrl}
                 alt={file.name || 'Image'}
                 style={{
                   maxWidth: '95vw',
@@ -240,23 +265,13 @@ export default function DashboardFileType({
           )}
         </Center>
       ) : (
-        <MantineImage
-          fit='contain'
-          mah={400}
-          src={dbFile ? `${fileRoute}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
-          alt={file.name || 'Image'}
-        />
+        <MantineImage fit='contain' mah={400} src={fileUrl} alt={file.name || 'Image'} />
       );
 
     case type === 'audio':
+      if (!fileUrl) return <Loader />;
       return show ? (
-        <audio
-          autoPlay
-          muted
-          controls
-          style={{ width: '100%' }}
-          src={dbFile ? `${fileRoute}${password ? `?pw=${password}` : ''}` : URL.createObjectURL(file)}
-        />
+        <audio autoPlay muted controls style={{ width: '100%' }} src={fileUrl} />
       ) : (
         <Placeholder text={`Click to play audio ${file.name}`} Icon={fileIcon(file.type)} />
       );
@@ -280,15 +295,16 @@ export default function DashboardFileType({
             }}
           />
         ) : (
-          <Render mode={renderIn} language={file.name.split('.').pop() || ''} code={fileContent} />
+          <Render mode={renderIn} language={extension} code={fileContent} />
         )
       ) : (
         <Placeholder text={`Click to view text ${file.name}`} Icon={fileIcon(file.type)} />
       );
 
     case isAsciicast === true:
-      return show && dbFile ? (
-        <Asciinema src={`${fileRoute}${password ? `?pw=${password}` : ''}`} />
+      if (!fileUrl) return <Loader />;
+      return show ? (
+        <Asciinema src={fileUrl} />
       ) : (
         <Placeholder
           text={`Click to download asciinema cast ${file.name}`}
@@ -297,26 +313,27 @@ export default function DashboardFileType({
       );
 
     case file.type === 'application/pdf':
-      return show && dbFile ? (
-        <Pdf src={`${fileRoute}${password ? `?pw=${password}` : ''}`} />
+      if (!fileUrl) return <Loader />;
+      return show ? (
+        <Pdf src={fileUrl} />
       ) : (
         <Placeholder text={`Click to view PDF ${file.name}`} Icon={fileIcon(file.type)} />
       );
 
     default:
-      if (dbFile && !show)
-        return <Placeholder text={`Click to view file ${file.name}`} Icon={fileIcon(file.type)} />;
+      if (!show) return <Placeholder text={`Click to view file ${file.name}`} Icon={fileIcon(file.type)} />;
 
-      if (dbFile && show)
+      if (show)
         return (
           <Paper withBorder p='xs' style={{ cursor: 'pointer' }}>
             <Placeholder
-              onClick={() => window.open(`${fileRoute}${password ? `?pw=${password}` : ''}`)}
+              onClick={() => window.open(fileUrl)}
               text={`Click to view file ${file.name} in a new tab`}
               Icon={fileIcon(file.type)}
             />
           </Paper>
         );
-      else return <IconFileUnknown size={48} />;
+
+      return <IconFileUnknown size={48} />;
   }
 }
