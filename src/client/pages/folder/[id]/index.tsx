@@ -1,6 +1,7 @@
 import { type Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { FolderBreadcrumb } from '@/lib/folderHierarchy';
+import { useTitle } from '@/lib/hooks/useTitle';
 import {
   ActionIcon,
   Anchor,
@@ -60,6 +61,8 @@ function PublicFolderCard({ folder }: { folder: Partial<Folder> }) {
 export function Component() {
   const { folder } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+
+  useTitle(folder.name);
 
   const buildBreadcrumbs = () => {
     const items: FolderBreadcrumb[] = [];
