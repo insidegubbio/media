@@ -56,6 +56,14 @@ export async function saveSession(
 
   session.id = user.id;
 
+  if (!session.client) {
+    session.client = {
+      client: 'unknown',
+      device: 'unknown',
+      ua: 'unknown',
+    };
+  }
+
   if (overwriteSessions || !session.sessionId) {
     const sessionId = randomCharacters(32);
     session.sessionId = sessionId;
