@@ -1,4 +1,4 @@
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import { Button, Center, Stack, Text, Title } from '@mantine/core';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';

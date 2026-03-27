@@ -4,7 +4,7 @@ import { uploadFiles } from '@/lib/client/upload/files';
 import { uploadPartialFiles } from '@/lib/client/upload/partial';
 import { useProgress } from '@/lib/client/upload/useProgress';
 import { humanizeDuration } from '@/lib/relativeTime';
-import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
+import { useUploadOptionsStore } from '@/lib/client/store/uploadOptions';
 import {
   Button,
   Collapse,

@@ -1,7 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { User } from '@/lib/db/models/user';
 import { fetchApi } from '@/lib/fetchApi';
-import { useUserStore } from '@/lib/store/user';
+import { useUserStore } from '@/lib/client/store/user';
 import {
   Anchor,
   Box,

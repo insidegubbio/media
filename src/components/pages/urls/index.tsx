@@ -1,9 +1,9 @@
 import DomainSelect from '@/components/DomainSelect';
 import GridTableSwitcher from '@/components/GridTableSwitcher';
 import { Response } from '@/lib/api/response';
+import { useViewStore } from '@/lib/client/store/view';
 import { Url } from '@/lib/db/models/url';
 import { fetchApi } from '@/lib/fetchApi';
-import { useViewStore } from '@/lib/store/view';
 import {
   ActionIcon,
   Anchor,

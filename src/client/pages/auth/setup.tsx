@@ -1,6 +1,6 @@
 import { type Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import {
   Anchor,
   Button,

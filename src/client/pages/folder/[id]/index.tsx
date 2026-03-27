@@ -1,7 +1,7 @@
 import { type Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { FolderBreadcrumb } from '@/lib/folderHierarchy';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import {
   ActionIcon,
   Anchor,

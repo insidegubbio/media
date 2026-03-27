@@ -3,7 +3,7 @@ import { config } from '@/lib/config';
 import { encrypt } from '@/lib/crypto';
 import Logger from '@/lib/logger';
 import enabled from '@/lib/oauth/enabled';
-import { githubAuth } from '@/lib/oauth/providerUtil';
+import { githubAuth } from '@/lib/oauth/providers';
 import { OAuthQuery, OAuthResponse } from '@/server/plugins/oauth';
 import typedPlugin from '@/server/typedPlugin';
 

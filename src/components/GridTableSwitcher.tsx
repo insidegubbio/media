@@ -1,4 +1,4 @@
-import { ViewStore, ViewType, useViewStore } from '@/lib/store/view';
+import { ViewStore, ViewType, useViewStore } from '@/lib/client/store/view';
 import { Center, SegmentedControl } from '@mantine/core';
 import { IconLayoutGrid, IconLayoutList } from '@tabler/icons-react';
 import { useShallow } from 'zustand/shallow';

@@ -1,7 +1,7 @@
 import { type loader } from '@/client/pages/dashboard/admin/users/[id]/files';
 import GridTableSwitcher from '@/components/GridTableSwitcher';
-import useObjectState from '@/lib/hooks/useObjectState';
-import { useViewStore } from '@/lib/store/view';
+import useObjectState from '@/lib/client/hooks/useObjectState';
+import { useViewStore } from '@/lib/client/store/view';
 import { ActionIcon, Group, Title, Tooltip } from '@mantine/core';
 import { IconArrowBackUp, IconGridPatternFilled, IconTableOptions } from '@tabler/icons-react';
 import { Link, useLoaderData } from 'react-router-dom';

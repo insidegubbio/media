@@ -1,6 +1,6 @@
 import { Url } from '@/lib/db/models/url';
 import { fetchApi } from '@/lib/fetchApi';
-import useObjectState from '@/lib/hooks/useObjectState';
+import useObjectState from '@/lib/client/hooks/useObjectState';
 import { Button, Divider, Modal, NumberInput, PasswordInput, Stack, Switch, TextInput } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { IconEye, IconKey, IconPencil, IconPencilOff, IconTrashFilled } from '@tabler/icons-react';

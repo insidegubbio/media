@@ -1,11 +1,11 @@
 import type { Response } from '@/lib/api/response';
+import useAvatar from '@/lib/client/hooks/useAvatar';
+import useLogin from '@/lib/client/hooks/useLogin';
+import { useLogout } from '@/lib/client/hooks/useLogout';
+import { useUserStore } from '@/lib/client/store/user';
 import type { SafeConfig } from '@/lib/config/safe';
 import { fetchApi } from '@/lib/fetchApi';
-import useAvatar from '@/lib/hooks/useAvatar';
-import useLogin from '@/lib/hooks/useLogin';
-import { useLogout } from '@/lib/hooks/useLogout';
 import { isAdministrator } from '@/lib/role';
-import { useUserStore } from '@/lib/store/user';
 import {
   AppShell,
   Avatar,

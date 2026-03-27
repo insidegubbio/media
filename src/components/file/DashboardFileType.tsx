@@ -1,5 +1,6 @@
+import { useSettingsStore } from '@/lib/client/store/settings';
+import { useUserStore } from '@/lib/client/store/user';
 import type { File as DbFile } from '@/lib/db/models/file';
-import { useSettingsStore } from '@/lib/store/settings';
 import {
   Box,
   Center,
@@ -12,12 +13,11 @@ import {
 } from '@mantine/core';
 import { Icon, IconFileUnknown, IconPlayerPlay, IconShieldLockFilled } from '@tabler/icons-react';
 import { useCallback, useEffect, useState } from 'react';
-import { renderMode } from '../render/renderMode';
 import Asciinema from '../render/Asciinema';
 import Pdf from '../render/Pdf';
 import Render from '../render/Render';
+import { renderMode } from '../render/renderMode';
 import fileIcon from './fileIcon';
-import { useUserStore } from '@/lib/store/user';
 
 const MAX_BYTES = 1 * 1024 * 1024;
 const FILE_BIG = '\n...\nThe file is too big to display click the download icon to view/download it.';

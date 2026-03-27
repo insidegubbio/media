@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
-import type { Config } from '../config/validate';
+import type { Config } from '@/lib/config/validate';
 
 export const defaultUploadOptions: UploadOptionsStore['options'] = {
   deletesAt: 'default',

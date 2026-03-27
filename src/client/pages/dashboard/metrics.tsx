@@ -1,5 +1,5 @@
 import DashboardMetrics from '@/components/pages/metrics';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import { isAdministrator } from '@/lib/role';
 import { redirect } from 'react-router-dom';
 

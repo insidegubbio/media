@@ -1,8 +1,8 @@
 import { useConfig } from '@/components/ConfigProvider';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
-import { findProvider } from '@/lib/oauth/providerUtil';
-import { useUserStore } from '@/lib/store/user';
+import { findProvider } from '@/lib/oauth/providers';
+import { useUserStore } from '@/lib/client/store/user';
 import { darken } from '@/lib/theme/color';
 import type { OAuthProviderType } from '@/prisma/client';
 import { Button, ButtonProps, Paper, SimpleGrid, Text, Title, useMantineTheme } from '@mantine/core';

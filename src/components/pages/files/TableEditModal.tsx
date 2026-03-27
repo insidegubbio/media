@@ -1,4 +1,4 @@
-import { FieldSettings, NAMES, useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
+import { FieldSettings, NAMES, useFileTableSettingsStore } from '@/lib/client/store/fileTableSettings';
 import {
   closestCenter,
   DndContext,

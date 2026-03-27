@@ -6,9 +6,9 @@ import TotpModal from '@/components/pages/login/TotpModal';
 import { getWebClient } from '@/lib/api/detect';
 import { ApiError } from '@/lib/api/errors';
 import { fetchApi } from '@/lib/fetchApi';
-import useLogin from '@/lib/hooks/useLogin';
-import useObjectState from '@/lib/hooks/useObjectState';
-import { useTitle } from '@/lib/hooks/useTitle';
+import useLogin from '@/lib/client/hooks/useLogin';
+import useObjectState from '@/lib/client/hooks/useObjectState';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import {
   Anchor,
   Box,

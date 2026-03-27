@@ -3,7 +3,7 @@ import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
 import { buildFolderHierarchy, getDescendantIds } from '@/lib/folderHierarchy';
-import { useFolders } from '@/lib/hooks/useFolders';
+import { useFolders } from '@/lib/client/hooks/useFolders';
 import { Button, Combobox, InputBase, Modal, Stack, Text, useCombobox } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconFolderSymlink } from '@tabler/icons-react';

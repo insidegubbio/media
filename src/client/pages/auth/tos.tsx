@@ -3,7 +3,7 @@ import { Response } from '@/lib/api/response';
 import { Container, LoadingOverlay } from '@mantine/core';
 import useSWR from 'swr';
 import GenericError from '../../error/GenericError';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 
 export function Component() {
   useTitle('Terms of Service');

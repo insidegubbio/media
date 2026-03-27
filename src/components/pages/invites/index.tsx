@@ -2,7 +2,7 @@ import GridTableSwitcher from '@/components/GridTableSwitcher';
 import { Response } from '@/lib/api/response';
 import { Invite } from '@/lib/db/models/invite';
 import { fetchApi } from '@/lib/fetchApi';
-import { useViewStore } from '@/lib/store/view';
+import { useViewStore } from '@/lib/client/store/view';
 import { Button, Group, Modal, NumberInput, Select, Stack, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';

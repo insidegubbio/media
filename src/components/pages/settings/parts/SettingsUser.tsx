@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api/errors';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
-import { useUserStore } from '@/lib/store/user';
+import { useUserStore } from '@/lib/client/store/user';
 import {
   ActionIcon,
   Button,

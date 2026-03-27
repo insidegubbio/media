@@ -1,7 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { Config } from '@/lib/config/validate';
-import { useSettingsStore } from '@/lib/store/settings';
-import { useUserStore } from '@/lib/store/user';
+import { useSettingsStore } from '@/lib/client/store/settings';
+import { useUserStore } from '@/lib/client/store/user';
 import { ZiplineTheme, findTheme, themeComponents } from '@/lib/theme';
 import dark_blue from '@/lib/theme/builtins/dark_blue';
 import { MantineProvider, createTheme } from '@mantine/core';

@@ -1,9 +1,9 @@
+import type { Response } from '@/lib/api/response';
+import { isAdministrator } from '@/lib/role';
 import { useEffect } from 'react';
 import { redirect } from 'react-router-dom';
 import useSWR from 'swr';
 import { useShallow } from 'zustand/shallow';
-import type { Response } from '../api/response';
-import { isAdministrator } from '../role';
 import { useUserStore } from '../store/user';
 
 export default function useLogin(administratorOnly: boolean = false) {

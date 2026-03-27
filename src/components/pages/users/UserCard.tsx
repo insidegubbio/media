@@ -1,6 +1,6 @@
 import { User } from '@/lib/db/models/user';
 import { ActionIcon, Avatar, Card, Group, Menu, Stack, Text } from '@mantine/core';
-import { useUserStore } from '@/lib/store/user';
+import { useUserStore } from '@/lib/client/store/user';
 import { IconDots, IconFiles, IconTrashFilled, IconUserEdit } from '@tabler/icons-react';
 import EditUserModal from './EditUserModal';
 import { useState } from 'react';

@@ -1,8 +1,8 @@
 import RelativeDate from '@/components/RelativeDate';
 import { Response } from '@/lib/api/response';
+import { useUserStore } from '@/lib/client/store/user';
 import { User } from '@/lib/db/models/user';
 import { canInteract, roleName } from '@/lib/role';
-import { useUserStore } from '@/lib/store/user';
 import { ActionIcon, Avatar, Box, Group, Tooltip } from '@mantine/core';
 import { IconEdit, IconFiles, IconTrashFilled } from '@tabler/icons-react';
 import { DataTable, DataTableSortStatus } from 'mantine-datatable';

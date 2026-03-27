@@ -6,7 +6,7 @@ import { ActionIcon, Anchor, Card, Group, Menu, Stack, Text, Tooltip } from '@ma
 import { useClipboard } from '@mantine/hooks';
 import { IconCopy, IconDots, IconPencil, IconQrcode, IconTrashFilled } from '@tabler/icons-react';
 import { copyUrl, deleteUrl } from './actions';
-import { useSettingsStore } from '@/lib/store/settings';
+import { useSettingsStore } from '@/lib/client/store/settings';
 
 export default function UserCard({
   url,

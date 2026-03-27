@@ -1,4 +1,4 @@
-import { getDomain } from '@/lib/webDomain';
+import { getDomain } from '@/lib/client/webDomain';
 import { Button, Group, Image, Modal, Select, Text, Tooltip } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { IconClipboardCheck, IconClipboardX, IconCopy, IconDownload } from '@tabler/icons-react';

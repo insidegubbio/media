@@ -1,7 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { IncompleteFile } from '@/lib/db/models/incompleteFile';
 import { fetchApi } from '@/lib/fetchApi';
-import { UpdateFn } from '@/lib/hooks/useObjectState';
+import { UpdateFn } from '@/lib/client/hooks/useObjectState';
 import { IncompleteFileStatus } from '@/prisma/client';
 import { Badge, Button, Card, Group, Modal, Paper, Stack, Text } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';

@@ -6,8 +6,8 @@ import { File } from '@/lib/db/models/file';
 import { Tag } from '@/lib/db/models/tag';
 import { fetchApi } from '@/lib/fetchApi';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
-import { useFolders } from '@/lib/hooks/useFolders';
-import { useSettingsStore } from '@/lib/store/settings';
+import { useFolders } from '@/lib/client/hooks/useFolders';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import {
   ActionIcon,
   Box,

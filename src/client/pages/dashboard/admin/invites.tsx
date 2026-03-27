@@ -1,5 +1,5 @@
 import DashboardInvites from '@/components/pages/invites';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 
 export function Component() {
   useTitle('Invites');

@@ -1,6 +1,6 @@
 import DomainSelect from '@/components/DomainSelect';
 import { useThemes } from '@/components/ThemeProvider';
-import { useSettingsStore } from '@/lib/store/settings';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { Group, Paper, Select, Stack, Switch, Text, Title } from '@mantine/core';
 import { IconMoonFilled, IconPaintFilled, IconSunFilled } from '@tabler/icons-react';
 import { useShallow } from 'zustand/shallow';

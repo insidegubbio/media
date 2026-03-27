@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { Response } from '../api/response';
+import { Response } from '../../api/response';
 const f = async () => {
   const res = await fetch('/api/version');
   if (!res.ok) throw new Error('Failed to fetch version');

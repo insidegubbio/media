@@ -4,7 +4,7 @@ import { renderMode } from '@/components/render/renderMode';
 import { bytes } from '@/lib/bytes';
 import { uploadFiles } from '@/lib/client/upload/files';
 import useMultiTextFiles from '@/lib/client/upload/useMultiTextFiles';
-import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
+import { useUploadOptionsStore } from '@/lib/client/store/uploadOptions';
 import { ActionIcon, Button, Group, Select, Tabs, Textarea, Title } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import {

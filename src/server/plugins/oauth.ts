@@ -2,7 +2,7 @@ import { config } from '@/lib/config';
 import { createToken, decrypt } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import Logger, { log } from '@/lib/logger';
-import { findProvider } from '@/lib/oauth/providerUtil';
+import { findProvider } from '@/lib/oauth/providers';
 import { OAuthProviderType, User } from '@/prisma/client';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';

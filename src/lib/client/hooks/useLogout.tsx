@@ -1,4 +1,4 @@
-import { useUserStore } from '@/lib/store/user';
+import { useUserStore } from '@/lib/client/store/user';
 import { showNotification } from '@mantine/notifications';
 import { IconLogout } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';

@@ -4,7 +4,7 @@ import { bytes } from '@/lib/bytes';
 import { User } from '@/lib/db/models/user';
 import { fetchApi } from '@/lib/fetchApi';
 import { canInteract } from '@/lib/role';
-import { useUserStore } from '@/lib/store/user';
+import { useUserStore } from '@/lib/client/store/user';
 import {
   ActionIcon,
   Button,

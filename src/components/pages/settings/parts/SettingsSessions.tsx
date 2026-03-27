@@ -1,6 +1,6 @@
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
-import { useLogout } from '@/lib/hooks/useLogout';
+import { useLogout } from '@/lib/client/hooks/useLogout';
 import { ActionIcon, Button, Modal, Paper, SimpleGrid, Skeleton, Table, Text, Title } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';

@@ -3,13 +3,13 @@ import { addMultipleToFolder, copyFile, deleteFile, downloadFile } from '@/compo
 import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
+import { useFolders } from '@/lib/client/hooks/useFolders';
+import { useQueryState } from '@/lib/client/hooks/useQueryState';
+import { NAMES, useFileTableSettingsStore } from '@/lib/client/store/fileTableSettings';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { type File } from '@/lib/db/models/file';
 import { Tag } from '@/lib/db/models/tag';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
-import { useFolders } from '@/lib/hooks/useFolders';
-import { useQueryState } from '@/lib/hooks/useQueryState';
-import { NAMES, useFileTableSettingsStore } from '@/lib/store/fileTableSettings';
-import { useSettingsStore } from '@/lib/store/settings';
 import {
   ActionIcon,
   Box,
@@ -44,7 +44,7 @@ import { lazy, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useSWR from 'swr';
 
-import { UpdateFn } from '@/lib/hooks/useObjectState';
+import { UpdateFn } from '@/lib/client/hooks/useObjectState';
 import { DashboardFilesModals } from '..';
 import TableEditModal from '../TableEditModal';
 import { bulkDelete, bulkFavorite } from '../bulk';

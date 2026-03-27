@@ -1,6 +1,6 @@
 import RelativeDate from '@/components/RelativeDate';
 import { Invite } from '@/lib/db/models/invite';
-import { useSettingsStore } from '@/lib/store/settings';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { ActionIcon, Anchor, Card, Group, Menu, Stack, Text } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { IconCopy, IconDots, IconQrcode, IconTrashFilled } from '@tabler/icons-react';

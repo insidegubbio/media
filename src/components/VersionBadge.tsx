@@ -1,4 +1,4 @@
-import useVersion from '@/lib/hooks/useVersion';
+import useVersion from '@/lib/client/hooks/useVersion';
 import {
   Anchor,
   Badge,

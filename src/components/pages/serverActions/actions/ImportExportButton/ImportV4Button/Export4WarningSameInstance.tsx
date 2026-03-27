@@ -1,5 +1,5 @@
 import { Export4 } from '@/lib/import/version4/validateExport';
-import { useUserStore } from '@/lib/store/user';
+import { useUserStore } from '@/lib/client/store/user';
 import { Box, Checkbox, Group, Text } from '@mantine/core';
 
 export function detectSameInstance(export4?: Export4 | null, currentUserId?: string) {

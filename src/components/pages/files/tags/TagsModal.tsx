@@ -2,7 +2,7 @@ import { mutateFiles } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
 import { Tag } from '@/lib/db/models/tag';
 import { fetchApi } from '@/lib/fetchApi';
-import { UpdateFn } from '@/lib/hooks/useObjectState';
+import { UpdateFn } from '@/lib/client/hooks/useObjectState';
 import { ActionIcon, Group, Modal, Paper, Stack, Text, Title, Tooltip } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { IconPencil, IconPlus, IconTagOff, IconTrashFilled } from '@tabler/icons-react';

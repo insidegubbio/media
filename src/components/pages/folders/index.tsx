@@ -3,8 +3,8 @@ import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
 import { FolderBreadcrumb } from '@/lib/folderHierarchy';
-import { SEPARATOR, useTitle } from '@/lib/hooks/useTitle';
-import { useViewStore } from '@/lib/store/view';
+import { SEPARATOR, useTitle } from '@/lib/client/hooks/useTitle';
+import { useViewStore } from '@/lib/client/store/view';
 import {
   Alert,
   Anchor,

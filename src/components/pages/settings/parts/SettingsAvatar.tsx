@@ -1,8 +1,8 @@
 import { Response } from '@/lib/api/response';
 import { readToDataURL } from '@/lib/base64';
 import { fetchApi } from '@/lib/fetchApi';
-import useAvatar from '@/lib/hooks/useAvatar';
-import { useUserStore } from '@/lib/store/user';
+import useAvatar from '@/lib/client/hooks/useAvatar';
+import { useUserStore } from '@/lib/client/store/user';
 import {
   Avatar,
   Button,

@@ -1,4 +1,4 @@
-import useObjectState from '@/lib/hooks/useObjectState';
+import useObjectState from '@/lib/client/hooks/useObjectState';
 import { useCallback } from 'react';
 
 export type UploadProgress = {

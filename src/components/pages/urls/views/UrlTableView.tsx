@@ -9,7 +9,7 @@ import { copyUrl, deleteUrl } from '../actions';
 import { IconCopy, IconPencil, IconQrcode, IconTrashFilled } from '@tabler/icons-react';
 import { useConfig } from '@/components/ConfigProvider';
 import { useClipboard } from '@mantine/hooks';
-import { useSettingsStore } from '@/lib/store/settings';
+import { useSettingsStore } from '@/lib/client/store/settings';
 import { formatRootUrl, trimUrl } from '@/lib/url';
 import EditUrlModal from '../EditUrlModal';
 import QRCodeModal from '@/components/QRCodeModal';

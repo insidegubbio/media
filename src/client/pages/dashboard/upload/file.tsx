@@ -1,5 +1,5 @@
 import UploadFile from '@/components/pages/upload/File';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 
 export function Component() {
   useTitle('Upload File');

@@ -26,7 +26,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSsrData } from '../../../components/ZiplineSSRProvider';
 import { getFile } from '../../ssr-view/server';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 
 type SsrData = {
   file: Partial<NonNullable<Awaited<ReturnType<typeof getFile>>>>;

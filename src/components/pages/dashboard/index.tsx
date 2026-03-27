@@ -2,7 +2,7 @@ import { useConfig } from '@/components/ConfigProvider';
 import Stat from '@/components/Stat';
 import type { Response } from '@/lib/api/response';
 import { bytes } from '@/lib/bytes';
-import useLogin from '@/lib/hooks/useLogin';
+import useLogin from '@/lib/client/hooks/useLogin';
 import { isAdministrator } from '@/lib/role';
 import { Button, Group, Paper, ScrollArea, SimpleGrid, Skeleton, Table, Text, Title } from '@mantine/core';
 import {

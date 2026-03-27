@@ -1,7 +1,7 @@
 import { Response } from '@/lib/api/response';
 import { Folder } from '@/lib/db/models/folder';
 import { fetchApi } from '@/lib/fetchApi';
-import { getDomain } from '@/lib/webDomain';
+import { getDomain } from '@/lib/client/webDomain';
 import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';

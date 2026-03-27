@@ -1,4 +1,4 @@
-import { useQueryState } from '@/lib/hooks/useQueryState';
+import { useQueryState } from '@/lib/client/hooks/useQueryState';
 import {
   Button,
   Center,

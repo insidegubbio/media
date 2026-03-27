@@ -1,6 +1,6 @@
 import GridTableSwitcher from '@/components/GridTableSwitcher';
-import useObjectState from '@/lib/hooks/useObjectState';
-import { useViewStore } from '@/lib/store/view';
+import useObjectState from '@/lib/client/hooks/useObjectState';
+import { useViewStore } from '@/lib/client/store/view';
 import { ActionIcon, Group, Menu, Title, Tooltip } from '@mantine/core';
 import {
   IconDots,

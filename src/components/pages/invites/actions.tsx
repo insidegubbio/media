@@ -1,8 +1,8 @@
 import { Response } from '@/lib/api/response';
 import { Invite } from '@/lib/db/models/invite';
 import { fetchApi } from '@/lib/fetchApi';
-import { conditionalWarning } from '@/lib/warningModal';
-import { getDomain } from '@/lib/webDomain';
+import { conditionalWarning } from '@/lib/client/warningModal';
+import { getDomain } from '@/lib/client/webDomain';
 import { Anchor } from '@mantine/core';
 import { useClipboard } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';

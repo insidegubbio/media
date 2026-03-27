@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import useSWR from 'swr';
-import { Response } from '../api/response';
+import { Response } from '../../api/response';
 import { useLocation } from 'react-router-dom';
 
 export const SEPARATOR = '–';

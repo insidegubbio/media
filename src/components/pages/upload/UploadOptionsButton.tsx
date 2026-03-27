@@ -3,8 +3,8 @@ import DomainSelect from '@/components/DomainSelect';
 import FolderComboboxOptions from '@/components/folders/FolderComboboxOptions';
 import { Response } from '@/lib/api/response';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
-import { useFolders } from '@/lib/hooks/useFolders';
-import { useUploadOptionsStore } from '@/lib/store/uploadOptions';
+import { useFolders } from '@/lib/client/hooks/useFolders';
+import { useUploadOptionsStore } from '@/lib/client/store/uploadOptions';
 import {
   Badge,
   Button,

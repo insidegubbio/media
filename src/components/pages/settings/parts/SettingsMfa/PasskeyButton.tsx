@@ -1,7 +1,7 @@
 import RelativeDate from '@/components/RelativeDate';
 import { fetchApi } from '@/lib/fetchApi';
-import useObjectState from '@/lib/hooks/useObjectState';
-import { useUserStore } from '@/lib/store/user';
+import useObjectState from '@/lib/client/hooks/useObjectState';
+import { useUserStore } from '@/lib/client/store/user';
 import { UserPasskey } from '@/prisma/client';
 import { ActionIcon, Button, Group, Modal, Paper, Stack, Text, TextInput } from '@mantine/core';
 import { modals } from '@mantine/modals';

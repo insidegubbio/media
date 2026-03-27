@@ -1,5 +1,5 @@
 import DashboardUsers from '@/components/pages/users';
-import { useTitle } from '@/lib/hooks/useTitle';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 
 export function Component() {
   useTitle('Users');
