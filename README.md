@@ -91,6 +91,9 @@ volumes:
   pgdata:
 ```
 
+> [!WARNING]
+> Zipline requires a cpu with AVX support. We don't provide binaries or images that have support for non-AVX cpus
+
 ### Volumes
 
 - `./uploads` - The folder where all the user uploads are stored (the default is `./uploads`)
