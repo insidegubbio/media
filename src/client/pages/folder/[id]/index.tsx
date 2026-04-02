@@ -1,7 +1,8 @@
 import { type Response } from '@/lib/api/response';
+import { useQueryState } from '@/lib/client/hooks/useQueryState';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import { Folder } from '@/lib/db/models/folder';
 import { FolderBreadcrumb } from '@/lib/folderHierarchy';
-import { useTitle } from '@/lib/client/hooks/useTitle';
 import {
   ActionIcon,
   Anchor,
@@ -9,6 +10,8 @@ import {
   Card,
   Container,
   Group,
+  Pagination,
+  Select,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -16,7 +19,7 @@ import {
   Title,
 } from '@mantine/core';
 import { IconFolder, IconUpload } from '@tabler/icons-react';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link, Params, useLoaderData, useNavigate } from 'react-router-dom';
 
 const DashboardFile = lazy(() => import('@/components/file/DashboardFile'));
@@ -58,6 +61,8 @@ function PublicFolderCard({ folder }: { folder: Partial<Folder> }) {
   );
 }
 
+const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45];
+
 export function Component() {
   const { folder } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
@@ -80,6 +85,21 @@ export function Component() {
 
   const breadcrumbs = buildBreadcrumbs();
   const children = (folder.children ?? []) as Partial<Folder>[];
+
+  const [perpage, setPerpage] = useState(15);
+  const [page, setPage] = useQueryState('page', 1);
+
+  const from = (page - 1) * perpage + 1;
+  const to = Math.min(page * perpage, folder.files?.length ?? 0);
+  const totalRecords = folder.files?.length ?? 0;
+  const cachedPages = Math.ceil(totalRecords / perpage);
+
+  const visible = useMemo(() => {
+    if (!folder.files) return [];
+
+    const start = (page - 1) * perpage;
+    return folder.files.slice(start, start + perpage);
+  }, [folder.files, page, perpage]);
 
   return (
     <>
@@ -132,7 +152,7 @@ export function Component() {
           </>
         )}
 
-        {(folder.files?.length ?? 0) > 0 && (
+        {(visible.length ?? 0) > 0 && (
           <>
             <Title order={3} mt='md' mb='sm'>
               Files
@@ -145,7 +165,7 @@ export function Component() {
               }}
               spacing='md'
             >
-              {folder.files?.map((file: any) => (
+              {visible.map((file: any) => (
                 <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
                   <DashboardFile file={file} reduce />
                 </Suspense>
@@ -159,6 +179,33 @@ export function Component() {
             This folder is empty.
           </Text>
         )}
+
+        <Group justify='space-between' align='center' mt='md'>
+          <Text size='sm'>{`${from} - ${to} / ${totalRecords} files`}</Text>
+
+          <Group gap='sm'>
+            <Select
+              value={perpage.toString()}
+              data={PER_PAGE_OPTIONS.map((val) => ({ value: val.toString(), label: `${val}` }))}
+              onChange={(value) => {
+                setPerpage(Number(value));
+                setPage(1);
+              }}
+              w={80}
+              size='xs'
+              variant='filled'
+            />
+
+            <Pagination
+              value={page}
+              onChange={setPage}
+              total={cachedPages}
+              size='sm'
+              withControls
+              withEdges
+            />
+          </Group>
+        </Group>
       </Container>
     </>
   );

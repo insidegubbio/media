@@ -2,7 +2,7 @@ import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
 import { File, cleanFiles, fileSchema, fileSelect } from '@/lib/db/models/file';
 import { canInteract } from '@/lib/role';
-import { zQsBoolean } from '@/lib/validation';
+import { paginationQs, zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -29,27 +29,7 @@ export default typedPlugin(
         schema: {
           description:
             'List, filter, and search files for the authenticated user (or another user if permitted).',
-          querystring: z.object({
-            page: z.coerce.number(),
-            perpage: z.coerce.number().default(15),
-            filter: z.enum(['dashboard', 'none', 'all']).optional().default('none'),
-            favorite: zQsBoolean.default(false).optional(),
-            sortBy: z
-              .enum([
-                'id',
-                'createdAt',
-                'updatedAt',
-                'deletesAt',
-                'name',
-                'originalName',
-                'size',
-                'type',
-                'views',
-                'favorite',
-              ])
-              .optional()
-              .default('createdAt'),
-            order: z.enum(['asc', 'desc']).optional().default('desc'),
+          querystring: paginationQs.extend({
             searchField: z.enum(['name', 'originalName', 'type', 'tags', 'id']).optional().default('name'),
             searchQuery: z.string().optional(),
             id: z.string().optional(),
