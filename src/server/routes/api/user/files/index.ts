@@ -2,7 +2,7 @@ import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
 import { File, cleanFiles, fileSchema, fileSelect } from '@/lib/db/models/file';
 import { canInteract } from '@/lib/role';
-import { paginationQs, zQsBoolean } from '@/lib/validation';
+import { paginationQs } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
