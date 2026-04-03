@@ -36,6 +36,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import GenericError from '../../error/GenericError';
+import { eitherTrue } from '@/lib/primitive';
 
 export default function Login() {
   useTitle('Login');
@@ -205,30 +206,45 @@ export default function Login() {
               />
             )}
 
-            <Divider label='or' />
+            {eitherTrue(
+              config.mfa.passkeys && browserSupportsWebAuthn(),
+              config.oauthEnabled.discord,
+              config.oauthEnabled.github,
+              config.oauthEnabled.google,
+              config.oauthEnabled.oidc,
+            ) && (
+              <>
+                <Divider label='or' />
 
-            {config.mfa.passkeys && browserSupportsWebAuthn() && <PasskeyAuthButton onAuthSuccess={mutate} />}
+                {config.mfa.passkeys && browserSupportsWebAuthn() && (
+                  <PasskeyAuthButton onAuthSuccess={mutate} />
+                )}
 
-            <Group grow>
-              {config.oauthEnabled.discord && (
-                <ExternalAuthButton
-                  provider='Discord'
-                  leftSection={<IconBrandDiscordFilled stroke={4} size='1.1rem' />}
-                />
-              )}
-              {config.oauthEnabled.github && (
-                <ExternalAuthButton provider='GitHub' leftSection={<IconBrandGithubFilled size='1.1rem' />} />
-              )}
-              {config.oauthEnabled.google && (
-                <ExternalAuthButton
-                  provider='Google'
-                  leftSection={<IconBrandGoogleFilled stroke={4} size='1.1rem' />}
-                />
-              )}
-              {config.oauthEnabled.oidc && (
-                <ExternalAuthButton provider='OIDC' leftSection={<IconCircleKeyFilled size='1.1rem' />} />
-              )}
-            </Group>
+                <Group grow>
+                  {config.oauthEnabled.discord && (
+                    <ExternalAuthButton
+                      provider='Discord'
+                      leftSection={<IconBrandDiscordFilled stroke={4} size='1.1rem' />}
+                    />
+                  )}
+                  {config.oauthEnabled.github && (
+                    <ExternalAuthButton
+                      provider='GitHub'
+                      leftSection={<IconBrandGithubFilled size='1.1rem' />}
+                    />
+                  )}
+                  {config.oauthEnabled.google && (
+                    <ExternalAuthButton
+                      provider='Google'
+                      leftSection={<IconBrandGoogleFilled stroke={4} size='1.1rem' />}
+                    />
+                  )}
+                  {config.oauthEnabled.oidc && (
+                    <ExternalAuthButton provider='OIDC' leftSection={<IconCircleKeyFilled size='1.1rem' />} />
+                  )}
+                </Group>
+              </>
+            )}
           </Stack>
         </Paper>
       </Center>
