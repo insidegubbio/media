@@ -1,8 +1,8 @@
 import ms from 'ms';
-import { Config } from '../config/validate';
 import { checkOutput, COMPRESS_TYPES, CompressType } from '../compress';
 import { config } from '../config';
-import { sanitizeExtension, sanitizeFilename } from '../fs';
+import { Config } from '../config/validate';
+import { sanitizeExtension } from '../fs';
 
 // from ms@3.0.0-canary.1
 type Unit =
@@ -257,10 +257,9 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
 
   const filename = headers['x-zipline-filename'];
   if (filename) {
-    const fn = sanitizeFilename(filename);
-    if (!fn) return headerError('x-zipline-filename', 'Invalid filename');
+    // checks aren't needed here as they are sanitized later in getFilename
 
-    response.overrides.filename = fn;
+    response.overrides.filename = filename;
   }
 
   const extension = headers['x-zipline-file-extension'];

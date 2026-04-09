@@ -7,6 +7,9 @@ import { Config } from '../config/validate';
 import { sanitizeFilename } from '../fs';
 import { formatFileName } from '../uploader/formatFileName';
 import { guess } from '../mimes';
+import { log } from '../logger';
+
+const logger = log('upload');
 
 const commonDoubleExts = [
   '.tar.gz',
@@ -79,25 +82,34 @@ export async function getFilename(
   extension: string,
   override?: string,
 ): Promise<{ error: string } | { fileName: string }> {
-  let fileName = override ? sanitizeFilename(override) : formatFileName(format, originalName);
-  if (!fileName) return { error: 'invalid file name' };
+  try {
+    let fileName = override ? sanitizeFilename(override) : formatFileName(format, originalName);
 
-  let fullFileName = `${fileName}${extension}`;
-  let existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-
-  if (existing && (override || format === 'name')) {
-    return { error: 'file with the same name already exists' };
-  }
-
-  while (existing && format === 'random') {
-    fileName = formatFileName(format, originalName);
     if (!fileName) return { error: 'invalid file name' };
 
-    fullFileName = `${fileName}${extension}`;
-    existing = await prisma.file.findFirst({ where: { name: fullFileName } });
-  }
+    let fullFileName = `${fileName}${extension}`;
+    let existing = await prisma.file.findFirst({ where: { name: fullFileName } });
 
-  return { fileName };
+    if (existing && (override || format === 'name')) {
+      return { error: 'file with the same name already exists' };
+    }
+
+    while (existing && format === 'random') {
+      fileName = formatFileName(format, originalName);
+      if (!fileName) return { error: 'invalid file name' };
+
+      fullFileName = `${fileName}${extension}`;
+      existing = await prisma.file.findFirst({ where: { name: fullFileName } });
+    }
+
+    return { fileName };
+  } catch (e) {
+    logger.warn(`error generating file name: ${e}`);
+
+    return {
+      error: e instanceof URIError ? 'invalid file name: make sure it is URL encoded' : 'invalid file name',
+    };
+  }
 }
 
 export async function getMimetype(

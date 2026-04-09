@@ -16,6 +16,7 @@ import { onUpload } from '@/lib/webhooks';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
+import { SavedMultipartFile } from '@fastify/multipart';
 import { stat } from 'fs/promises';
 import { z } from 'zod';
 
@@ -99,7 +100,18 @@ export default typedPlugin(
           if (!req.user && !folder.allowUploads) throw new ApiError(3002);
         }
 
-        const files = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
+        let files: SavedMultipartFile[] = [];
+        try {
+          files = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
+        } catch (e) {
+          logger.warn('error parsing multipart/form-data request', {
+            error: e instanceof Error ? e.message : e,
+          });
+
+          if (e instanceof Error && e.message.startsWith('Multipart:')) throw new ApiError(1061);
+        }
+
+        if (!files.length) throw new ApiError(1062);
 
         const totalFileSize = files.reduce((acc, x) => acc + x.file.bytesRead, 0);
         const quotaCheck = await checkQuota(req.user, totalFileSize, files.length);

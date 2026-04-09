@@ -59,6 +59,8 @@ export const API_ERRORS = {
   1058: 'From date must be before to date',
   1059: 'From date must be in the past',
   1060: 'Passkey has legacy registration data and cannot be used',
+  1061: 'Invalid multipart/form-data request',
+  1062: 'No files in multipart/form-data request',
 
   // 2xxx, session errors
   2000: 'Invalid login session',
