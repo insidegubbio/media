@@ -19,10 +19,8 @@ export default function HighlightCode({ language, code }: { language: string; co
     import('highlight.js').then((mod) => setHljs(mod.default || mod));
   }, []);
 
-  const cleanedCode = sanitize.sanitize(code, { USE_PROFILES: { html: true } });
-  const lines = cleanedCode.split('\n');
+  const lines = sanitize.sanitize(code, { USE_PROFILES: { html: true } }).split('\n');
   const isExpandable = !noClamp && lines.length > 50;
-
   const totalCount = isExpandable && !expanded ? 50 : lines.length;
   const estimatedHeight = Math.min(totalCount * 24, 400);
 
@@ -38,6 +36,7 @@ export default function HighlightCode({ language, code }: { language: string; co
 
   const rowRenderer = (index: number) => (
     <div
+      key={index}
       style={{
         display: 'flex',
         alignItems: 'flex-start',
@@ -45,7 +44,6 @@ export default function HighlightCode({ language, code }: { language: string; co
         fontFamily: theme.fontFamilyMonospace,
         fontSize: '0.8rem',
         lineHeight: '1.5',
-        backgroundColor: 'transparent',
       }}
     >
       <Text
@@ -90,13 +88,13 @@ export default function HighlightCode({ language, code }: { language: string; co
         )}
       </CopyButton>
 
-      <div style={{ height: noClamp && (expanded || !isExpandable) ? 'auto' : estimatedHeight }}>
+      <div style={{ height: noClamp ? 'auto' : estimatedHeight }}>
         <Virtuoso
+          useWindowScroll={noClamp}
           style={{ height: '100%' }}
           totalCount={totalCount}
           itemContent={rowRenderer}
-          initialItemCount={30}
-          increaseViewportBy={200}
+          increaseViewportBy={400}
         />
       </div>
 
