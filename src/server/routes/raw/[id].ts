@@ -6,11 +6,12 @@ import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { guess } from '@/lib/mimes';
+import { TimedCache } from '@/lib/timedCache';
 import typedPlugin from '@/server/typedPlugin';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
-const viewsCache = new Map<string, number>();
 const VIEW_WINDOW = 5 * 1000;
+const viewsCache = new TimedCache<string, number>(VIEW_WINDOW);
 
 type Params = {
   id: string;
