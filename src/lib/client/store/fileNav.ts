@@ -35,11 +35,11 @@ export const useFileNavStore = create<FileNavStore>()((set) => ({
     set((state) => {
       if (!state.current) return state;
 
-      const currentIndex = state.ids.indexOf(state.current);
-      if (currentIndex <= 0) return state;
+      const idx = state.ids.indexOf(state.current);
+      if (idx <= 0) return state;
 
       return {
-        current: state.ids[currentIndex - 1],
+        current: state.ids[idx - 1],
       };
     }),
 
@@ -47,11 +47,11 @@ export const useFileNavStore = create<FileNavStore>()((set) => ({
     set((state) => {
       if (!state.current) return state;
 
-      const currentIndex = state.ids.indexOf(state.current);
-      if (currentIndex < 0 || currentIndex >= state.ids.length - 1) return state;
+      const idx = state.ids.indexOf(state.current);
+      if (idx < 0 || idx >= state.ids.length - 1) return state;
 
       return {
-        current: state.ids[currentIndex + 1],
+        current: state.ids[idx + 1],
       };
     }),
 }));

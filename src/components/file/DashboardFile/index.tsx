@@ -22,6 +22,7 @@ export default function DashboardFile({
   return (
     <>
       {!onOpen && <FileModal open={open} setOpen={setOpen} file={file} reduce={reduce} user={id} />}
+
       <Card
         shadow='md'
         radius='md'
