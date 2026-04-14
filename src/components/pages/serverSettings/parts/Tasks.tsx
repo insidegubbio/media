@@ -86,6 +86,13 @@ export default function Tasks({
             placeholder='1d'
             {...form.getInputProps('tasksCleanThumbnailsInterval')}
           />
+
+          <TextInput
+            label='Metrics Interval'
+            description='How often to collect metrics data. Setting this to a lower value will give you more up-to-date metrics, but may increase CPU usage.'
+            placeholder='30m'
+            {...form.getInputProps('tasksMetricsInterval')}
+          />
         </Stack>
 
         <Button type='submit' mt='md' loading={isLoading} leftSection={<IconDeviceFloppy size='1rem' />}>
