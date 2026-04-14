@@ -61,11 +61,14 @@ export const API_ERRORS = {
   1060: 'Passkey has legacy registration data and cannot be used',
   1061: 'Invalid multipart/form-data request',
   1062: 'No files in multipart/form-data request',
+  1063: 'Already linked to this OAuth provider',
+  1064: 'Invalid OAuth state parameter',
 
   // 2xxx, session errors
   2000: 'Invalid login session',
   2001: 'Invalid token',
   2002: 'Not logged in',
+  2003: 'OAuth provider is not configured (or misconfigured)',
 
   // 3xxx, permission errors
   3000: 'Admin only',
@@ -84,6 +87,8 @@ export const API_ERRORS = {
   3013: "You don't have permission to delete the selected files",
   3014: "You don't have permission to modify the selected files",
   3015: 'Not super admin',
+  3016: 'OAuth registration is disabled',
+  3017: 'OAuth login is not allowed for this account',
 
   // 4xxx, not founds
   4000: 'File not found',
@@ -109,6 +114,13 @@ export const API_ERRORS = {
   6001: 'Failed to fetch version details',
   6002: 'Failed to rename file in datasource',
   6003: 'There was an error during a healthcheck',
+  6004: 'Failed to fetch OAuth access token',
+  6005: 'No access token in OAuth response',
+  6006: 'No refresh token in OAuth response',
+  6007: 'Failed to fetch OAuth user',
+  6008: 'OAuth provider request failed',
+  6009: "Couldn't create user via OAuth profile",
+  6010: 'The username is already taken by another account',
 
   // 9xxx catch all
   9000: 'Bad request',
@@ -128,14 +140,16 @@ export type ApiErrorPayload = {
 };
 
 export class ApiError extends Error {
-  public readonly code: ApiErrorCode;
   public readonly status: number;
   public additional: Record<string, any>;
 
-  constructor(code: ApiErrorCode, message?: string, status?: number) {
+  constructor(
+    public readonly code: ApiErrorCode,
+    message?: string,
+    status?: number,
+  ) {
     super(message ?? API_ERRORS[code] ?? 'Unknown API error');
 
-    this.code = code;
     this.status = status ?? ApiError.codeToHttpStatus(code);
     this.additional = {} as Record<string, any>;
 
@@ -182,5 +196,13 @@ export class ApiError extends Error {
     if (code >= 6000 && code < 7000) return 500;
 
     return 500;
+  }
+}
+
+export class RedirectError extends Error {
+  constructor(public readonly url: string) {
+    super('Redirect');
+
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }

@@ -1,4 +1,4 @@
-import { ApiError } from '@/lib/api/errors';
+import { ApiError, RedirectError } from '@/lib/api/errors';
 import type { FastifyInstance } from 'fastify';
 import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } from 'fastify-type-provider-zod';
 
@@ -42,6 +42,10 @@ export function registerHandlers(server: FastifyInstance, mode: string) {
         code: 1000,
         details: error.message,
       });
+    }
+
+    if (error instanceof RedirectError) {
+      return res.redirect(error.url);
     }
 
     if (error instanceof ApiError) {

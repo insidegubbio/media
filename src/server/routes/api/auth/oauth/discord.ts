@@ -1,38 +1,29 @@
+import { ApiError, RedirectError } from '@/lib/api/errors';
 import { fetchToDataURL } from '@/lib/base64';
 import { config } from '@/lib/config';
-import { encrypt } from '@/lib/crypto';
 import Logger from '@/lib/logger';
 import enabled from '@/lib/oauth/enabled';
-import { discordAuth } from '@/lib/oauth/providers';
+import { encryptOAuthState } from '@/lib/oauth/state';
+import { discordAuthorizeURL, discordUser } from '@/lib/oauth/providers';
 import { OAuthQuery, OAuthResponse } from '@/server/plugins/oauth';
 import typedPlugin from '@/server/typedPlugin';
 
 async function discordOauth({ code, host, state }: OAuthQuery, logger: Logger): Promise<OAuthResponse> {
-  if (!config.features.oauthRegistration)
-    return {
-      error: 'OAuth registration is disabled.',
-      error_code: 403,
-    };
+  if (!config.features.oauthRegistration) throw new ApiError(3016);
 
   const { discord: discordEnabled } = enabled(config);
 
-  if (!discordEnabled)
-    return {
-      error: 'Discord OAuth is not configured.',
-      error_code: 401,
-    };
+  if (!discordEnabled) throw new ApiError(2003, 'Discord OAuth is not configured.');
 
   if (!code) {
-    const linkState = encrypt('link', config.core.secret);
-
-    return {
-      redirect: discordAuth.url(
-        config.oauth.discord.clientId!,
-        `${config.core.returnHttpsUrls ? 'https' : 'http'}://${host}`,
-        state === 'link' ? linkState : undefined,
-        config.oauth.discord.redirectUri ?? undefined,
-      ),
-    };
+    throw new RedirectError(
+      discordAuthorizeURL({
+        clientId: config.oauth.discord.clientId!,
+        origin: `${config.core.returnHttpsUrls ? 'https' : 'http'}://${host}`,
+        state: encryptOAuthState({ mode: state === 'link' ? 'link' : 'default' }),
+        redirectUri: config.oauth.discord.redirectUri!,
+      }),
+    );
   }
 
   const body = new URLSearchParams({
@@ -65,29 +56,26 @@ async function discordOauth({ code, host, state }: OAuthQuery, logger: Logger): 
       text,
     });
 
-    return {
-      error: 'Failed to fetch access token',
-    };
+    throw new ApiError(6004);
   }
 
   const json = await res.json();
 
-  if (!json.access_token) return { error: 'No access token in response' };
-  if (!json.refresh_token) return { error: 'No refresh token in response' };
+  if (!json.access_token) throw new ApiError(6005);
+  if (!json.refresh_token) throw new ApiError(6006);
 
-  const userJson = await discordAuth.user(json.access_token);
-  if (!userJson) return { error: 'Failed to fetch user' };
+  const userJson = await discordUser({
+    accessToken: json.access_token,
+  });
+  if (!userJson) throw new ApiError(6007);
 
   logger.debug('user', { '@me': userJson });
 
   const allowedIds = config.oauth.discord.allowedIds;
   const deniedIds = config.oauth.discord.deniedIds;
-  if (deniedIds && deniedIds.length > 0 && deniedIds.includes(userJson.id)) {
-    return { error: 'You are not allowed to log in with Discord.' };
-  }
-  if (allowedIds && allowedIds.length > 0 && !allowedIds.includes(userJson.id)) {
-    return { error: 'You are not allowed to log in with Discord.' };
-  }
+  if (deniedIds && deniedIds.length > 0 && deniedIds.includes(userJson.id)) throw new ApiError(3017);
+
+  if (allowedIds && allowedIds.length > 0 && !allowedIds.includes(userJson.id)) throw new ApiError(3017);
 
   const avatar = userJson.avatar
     ? `https://cdn.discordapp.com/avatars/${userJson.id}/${userJson.avatar}.png`

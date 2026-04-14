@@ -1,38 +1,29 @@
+import { ApiError, RedirectError } from '@/lib/api/errors';
 import { fetchToDataURL } from '@/lib/base64';
 import { config } from '@/lib/config';
-import { encrypt } from '@/lib/crypto';
 import Logger from '@/lib/logger';
 import enabled from '@/lib/oauth/enabled';
-import { googleAuth } from '@/lib/oauth/providers';
+import { encryptOAuthState } from '@/lib/oauth/state';
+import { googleAuthorizeURL, googleUser } from '@/lib/oauth/providers';
 import { OAuthQuery, OAuthResponse } from '@/server/plugins/oauth';
 import typedPlugin from '@/server/typedPlugin';
 
 async function googleOauth({ code, host, state }: OAuthQuery, logger: Logger): Promise<OAuthResponse> {
-  if (!config.features.oauthRegistration)
-    return {
-      error: 'OAuth registration is disabled.',
-      error_code: 403,
-    };
+  if (!config.features.oauthRegistration) throw new ApiError(3016);
 
   const { google: googleEnabled } = enabled(config);
 
-  if (!googleEnabled)
-    return {
-      error: 'Google OAuth is not configured.',
-      error_code: 401,
-    };
+  if (!googleEnabled) throw new ApiError(2003, 'Google OAuth is not configured.');
 
   if (!code) {
-    const linkState = encrypt('link', config.core.secret);
-
-    return {
-      redirect: googleAuth.url(
-        config.oauth.google.clientId!,
-        `${config.core.returnHttpsUrls ? 'https' : 'http'}://${host}`,
-        state === 'link' ? linkState : undefined,
-        config.oauth.google.redirectUri ?? undefined,
-      ),
-    };
+    throw new RedirectError(
+      googleAuthorizeURL({
+        clientId: config.oauth.google.clientId!,
+        origin: `${config.core.returnHttpsUrls ? 'https' : 'http'}://${host}`,
+        state: encryptOAuthState({ mode: state === 'link' ? 'link' : 'default' }),
+        redirectUri: config.oauth.google.redirectUri!,
+      }),
+    );
   }
 
   const body = new URLSearchParams({
@@ -63,16 +54,16 @@ async function googleOauth({ code, host, state }: OAuthQuery, logger: Logger): P
       text,
     });
 
-    return {
-      error: 'Failed to fetch access token',
-    };
+    throw new ApiError(6004);
   }
 
   const json = await res.json();
-  if (!json.access_token) return { error: 'No access token in response' };
+  if (!json.access_token) throw new ApiError(6005);
 
-  const userJson = await googleAuth.user(json.access_token);
-  if (!userJson) return { error: 'Failed to fetch user' };
+  const userJson = await googleUser({
+    accessToken: json.access_token,
+  });
+  if (!userJson) throw new ApiError(6007);
 
   logger.debug('user', { userinfo: userJson });
 

@@ -63,8 +63,8 @@ async function main() {
   }).withTypeProvider<ZodTypeProvider>();
 
   await registerPlugins(server);
-  await registerRoutes(server, MODE);
   registerHandlers(server, MODE);
+  await registerRoutes(server, MODE);
 
   if (process.env.ZIPLINE_OUTPUT_OPENAPI === 'true') generateOpenApiSpec(server);
 

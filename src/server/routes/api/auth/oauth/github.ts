@@ -1,37 +1,29 @@
+import { ApiError, RedirectError } from '@/lib/api/errors';
 import { fetchToDataURL } from '@/lib/base64';
 import { config } from '@/lib/config';
-import { encrypt } from '@/lib/crypto';
 import Logger from '@/lib/logger';
 import enabled from '@/lib/oauth/enabled';
-import { githubAuth } from '@/lib/oauth/providers';
+import { githubAuthorizeURL, githubUser } from '@/lib/oauth/providers';
+import { encryptOAuthState } from '@/lib/oauth/state';
 import { OAuthQuery, OAuthResponse } from '@/server/plugins/oauth';
 import typedPlugin from '@/server/typedPlugin';
 
-async function githubOauth({ code, state }: OAuthQuery, logger: Logger): Promise<OAuthResponse> {
-  if (!config.features.oauthRegistration)
-    return {
-      error: 'OAuth registration is disabled.',
-      error_code: 403,
-    };
+async function githubOauth({ code, host, state }: OAuthQuery, logger: Logger): Promise<OAuthResponse> {
+  if (!config.features.oauthRegistration) throw new ApiError(3016);
 
   const { github: githubEnabled } = enabled(config);
 
-  if (!githubEnabled)
-    return {
-      error: 'GitHub OAuth is not configured.',
-      error_code: 401,
-    };
+  if (!githubEnabled) throw new ApiError(2003, 'GitHub OAuth is not configured.');
 
   if (!code) {
-    const linkState = encrypt('link', config.core.secret);
-
-    return {
-      redirect: githubAuth.url(
-        config.oauth.github.clientId!,
-        state === 'link' ? linkState : undefined,
-        config.oauth.github.redirectUri ?? undefined,
-      ),
-    };
+    throw new RedirectError(
+      githubAuthorizeURL({
+        clientId: config.oauth.github.clientId!,
+        state: encryptOAuthState({ mode: state === 'link' ? 'link' : 'default' }),
+        redirectUri: config.oauth.github.redirectUri!,
+        origin: `${config.core.returnHttpsUrls ? 'https' : 'http'}://${host}`,
+      }),
+    );
   }
 
   const body = JSON.stringify({
@@ -55,10 +47,7 @@ async function githubOauth({ code, state }: OAuthQuery, logger: Logger): Promise
 
   const isJson = res.headers.get('content-type')?.startsWith('application/json');
 
-  if (!isJson && !res.ok)
-    return {
-      error: 'Failed to fetch access token',
-    };
+  if (!isJson && !res.ok) throw new ApiError(6004);
 
   const json = await res.json();
 
@@ -68,13 +57,15 @@ async function githubOauth({ code, state }: OAuthQuery, logger: Logger): Promise
     });
     logger.debug('failed to fetch access token', { json, status: res.status });
 
-    return { error: 'there was an error while processing github request' };
+    throw new ApiError(6008);
   }
 
-  if (!json.access_token) return { error: 'No access token in response' };
+  if (!json.access_token) throw new ApiError(6005);
 
-  const userJson = await githubAuth.user(json.access_token);
-  if (!userJson) return { error: 'Failed to fetch user' };
+  const userJson = await githubUser({
+    accessToken: json.access_token,
+  });
+  if (!userJson) throw new ApiError(6007);
 
   logger.debug('user', { user: userJson });
 

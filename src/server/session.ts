@@ -20,7 +20,11 @@ export type ZiplineSession = {
   id: string | null;
   sessionId: string | null;
   client: ZiplineClient;
+
+  pkceVerifier?: string;
 };
+
+export type ZiplineIronSession = Awaited<ReturnType<typeof getSession>>;
 
 export async function getSession(
   req: FastifyRequest | IncomingMessage,
@@ -48,7 +52,7 @@ export async function getSession(
 }
 
 export async function saveSession(
-  session: Awaited<ReturnType<typeof getSession>>,
+  session: ZiplineIronSession,
   user: { id: string } & Record<string, any>,
   overwriteSessions = true,
 ) {
