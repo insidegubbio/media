@@ -24,7 +24,7 @@ import { useShallow } from 'zustand/shallow';
 import DashboardFileType from '../DashboardFileType';
 import { copyFile, deleteFile, downloadFile, favoriteFile, viewFile } from '../actions';
 import EditFileDetailsModal from './EditFileDetailsModal';
-import classes from './FileModalFullscreen.module.css';
+import classes from './FileViewer.module.css';
 
 function ActionButton({
   Icon,
