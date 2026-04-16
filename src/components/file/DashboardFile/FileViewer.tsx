@@ -9,7 +9,6 @@ import {
   Drawer,
   Group,
   Paper,
-  SimpleGrid,
   Stack,
   Text,
   Title,
@@ -128,10 +127,6 @@ export default function FileViewer({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, sequenced, hasPrev, hasNext, goPrev, goNext, setOpen]);
-
-  useEffect(() => {
-    if (!open) setInfoOpen(false);
-  }, [open]);
 
   return (
     <>
