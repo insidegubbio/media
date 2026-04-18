@@ -1,5 +1,6 @@
 import DashboardFileType from '@/components/file/DashboardFileType';
 import TagPill from '@/components/pages/files/tags/TagPill';
+import { useTitle } from '@/lib/client/hooks/useTitle';
 import { File } from '@/lib/db/models/file';
 import { User } from '@/lib/db/models/user';
 import { parseString } from '@/lib/parser';
@@ -8,7 +9,6 @@ import { formatRootUrl } from '@/lib/url';
 import {
   ActionIcon,
   Anchor,
-  Box,
   Button,
   Center,
   Collapse,
@@ -26,7 +26,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSsrData } from '../../../components/ZiplineSSRProvider';
 import { getFile } from '../../ssr-view/server';
-import { useTitle } from '@/lib/client/hooks/useTitle';
 
 type SsrData = {
   file: Partial<NonNullable<Awaited<ReturnType<typeof getFile>>>>;
@@ -143,15 +142,9 @@ export default function ViewFileId() {
         </Paper>
       </Collapse>
 
-      {file.name!.endsWith('.md') || file.name!.endsWith('.tex') ? (
-        <Paper m='md' p='md' withBorder>
-          <DashboardFileType file={file as unknown as File} password={pw} show code={code} />
-        </Paper>
-      ) : (
-        <Box m='sm'>
-          <DashboardFileType file={file as unknown as File} password={pw} show code={code} />
-        </Box>
-      )}
+      <Center m='sm'>
+        <DashboardFileType file={file as unknown as File} password={pw} show code={code} fullscreen />
+      </Center>
     </>
   ) : (
     <>

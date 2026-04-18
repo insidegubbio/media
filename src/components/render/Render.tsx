@@ -41,10 +41,13 @@ export default function Render({
   mode,
   language,
   code,
+  ...props
 }: {
   mode: RenderMode;
   language: string;
   code: string;
+
+  [key: string]: any;
 }) {
   const [highlight, setHighlight] = useState(false);
 
@@ -54,7 +57,7 @@ export default function Render({
         <>
           <RenderAlert renderer='KaTeX' state={highlight} change={(s) => setHighlight(s)} />
 
-          {highlight ? <HighlightCode language={language} code={code} /> : <KaTeX tex={code} />}
+          {highlight ? <HighlightCode language={language} code={code} {...props} /> : <KaTeX tex={code} />}
         </>
       );
     case RenderMode.Markdown:
@@ -62,10 +65,10 @@ export default function Render({
         <>
           <RenderAlert renderer='Markdown' state={highlight} change={(s) => setHighlight(s)} />
 
-          {highlight ? <HighlightCode language={language} code={code} /> : <Markdown md={code} />}
+          {highlight ? <HighlightCode language={language} code={code} {...props} /> : <Markdown md={code} />}
         </>
       );
     default:
-      return <HighlightCode language={language} code={code} />;
+      return <HighlightCode language={language} code={code} {...props} />;
   }
 }

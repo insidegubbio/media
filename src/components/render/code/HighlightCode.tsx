@@ -1,15 +1,24 @@
 import { ActionIcon, Button, CopyButton, Paper, Text, useMantineTheme } from '@mantine/core';
 import { IconCheck, IconChevronDown, IconChevronUp, IconClipboardCopy } from '@tabler/icons-react';
 import type { HLJSApi } from 'highlight.js';
-import { useEffect, useMemo, useState } from 'react';
-import { Virtuoso } from 'react-virtuoso';
-import { useLocation } from 'react-router-dom';
 import * as sanitize from 'isomorphic-dompurify';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Virtuoso } from 'react-virtuoso';
 import './HighlightCode.theme.scss';
 
-export default function HighlightCode({ language, code }: { language: string; code: string }) {
+export default function HighlightCode({
+  language,
+  code,
+  noClamp,
+  scrollParent,
+}: {
+  noClamp?: boolean;
+  language: string;
+  code: string;
+  scrollParent?: HTMLElement | null;
+}) {
   const { pathname } = useLocation();
-  const noClamp = pathname.startsWith('/view/') || pathname.startsWith('/dashboard/files');
 
   const theme = useMantineTheme();
   const [expanded, setExpanded] = useState(false);
@@ -88,10 +97,11 @@ export default function HighlightCode({ language, code }: { language: string; co
         )}
       </CopyButton>
 
-      <div style={{ height: noClamp ? 'auto' : estimatedHeight, overflowX: 'auto' }}>
+      <div style={{ height: noClamp ? undefined : estimatedHeight, overflowX: 'auto' }}>
         <Virtuoso
-          useWindowScroll={noClamp}
-          style={{ height: '100%' }}
+          useWindowScroll={!!noClamp && !scrollParent}
+          customScrollParent={scrollParent ?? undefined}
+          style={{ height: noClamp ? undefined : '100%' }}
           totalCount={totalCount}
           itemContent={rowRenderer}
           increaseViewportBy={400}
