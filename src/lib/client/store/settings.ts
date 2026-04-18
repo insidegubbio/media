@@ -20,7 +20,7 @@ const defaultSettings: SettingsStore['settings'] = {
   disableMediaPreview: false,
   warnDeletion: true,
   fileNavButtons: true,
-  fileViewer: 'default',
+  fileViewer: 'fullscreen',
   theme: 'builtin:dark_blue',
   themeDark: 'builtin:dark_blue',
   themeLight: 'builtin:light_blue',
