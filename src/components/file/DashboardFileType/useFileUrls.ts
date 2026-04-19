@@ -1,6 +1,6 @@
 import { useUserStore } from '@/lib/client/store/user';
 import type { File as DbFile } from '@/lib/db/models/file';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 export function appendPassword(url: string, password?: string | null) {
   return `${url}${password ? `?pw=${encodeURIComponent(password)}` : ''}`;
@@ -18,12 +18,6 @@ export default function useFileUrls({ file, password }: { file: DbFile | File; p
   const user = useUserStore((state) => state.user);
 
   const blobUrl = useMemo(() => (isDbFile(file) ? null : URL.createObjectURL(file as File)), [file]);
-
-  useEffect(() => {
-    if (!blobUrl) return;
-
-    return () => URL.revokeObjectURL(blobUrl);
-  }, [blobUrl]);
 
   return useMemo(() => {
     if (!isDbFile(file)) {
