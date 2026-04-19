@@ -332,11 +332,19 @@ export default typedPlugin(
             mfaPasskeysRpID: z
               .string()
               .trim()
+              .refine(
+                (v) => v.length === 0 || /^[a-zA-Z0-9.-]+$/.test(v),
+                'RP ID can only contain letters, numbers, dots, and hyphens. Example: example.com, localhost, zipline.example.com.',
+              )
               .transform((v) => (v.length === 0 ? null : v))
               .nullable(),
             mfaPasskeysOrigin: z
               .string()
               .trim()
+              .refine(
+                (v) => v.length === 0 || /^https?:\/\/[a-zA-Z0-9.-]+(:\d+)?(\/.*)?$/.test(v),
+                'Origin must be a valid URL starting with http:// or https://',
+              )
               .transform((v) => (v.length === 0 ? null : v))
               .nullable(),
 
