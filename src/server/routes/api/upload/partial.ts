@@ -89,7 +89,7 @@ export default typedPlugin(
           if (!req.user && !folder.allowUploads) throw new ApiError(3002);
         }
 
-        const files = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
+        const { files } = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
 
         const response: ApiUploadPartialResponse = {
           files: [],

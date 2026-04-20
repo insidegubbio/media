@@ -101,7 +101,9 @@ export default typedPlugin(
 
         let files: SavedMultipartFile[] = [];
         try {
-          files = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
+          const res = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
+
+          files = res.files;
         } catch (e) {
           logger.warn('error parsing multipart/form-data request', {
             error: e instanceof Error ? e.message : e,
