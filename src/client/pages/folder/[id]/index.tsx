@@ -117,13 +117,6 @@ export function Component() {
   return (
     <>
       <Container my='lg'>
-        {/* <FileModal
-          open={!!currentFile}
-          setOpen={(open) => setCurrent(open ? (currentFile?.id ?? null) : null)}
-          file={currentFile}
-          reduce
-          sequenced
-        /> */}
         <DashboardFileModal
           open={!!currentFile}
           setOpen={(open) => setCurrent(open ? (currentFile?.id ?? null) : null)}

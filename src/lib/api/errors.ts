@@ -69,6 +69,7 @@ export const API_ERRORS = {
   2001: 'Invalid token',
   2002: 'Not logged in',
   2003: 'OAuth provider is not configured (or misconfigured)',
+  2004: 'Invalid login steps (cookie relying on token)',
 
   // 3xxx, permission errors
   3000: 'Admin only',

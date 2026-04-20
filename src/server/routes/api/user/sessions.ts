@@ -24,7 +24,7 @@ export default typedPlugin(
             'List the current browser session and other active sessions for the authenticated user.',
           response: {
             200: z.object({
-              current: userSessionSchema,
+              current: userSessionSchema.nullable(),
               other: z.array(userSessionSchema),
             }),
           },
@@ -37,10 +37,8 @@ export default typedPlugin(
 
         const currentDbSession = req.user.sessions.find((session) => session.id === currentSession.sessionId);
 
-        if (!currentDbSession) throw new ApiError(2000);
-
         return res.send({
-          current: currentDbSession,
+          current: currentDbSession ?? null,
           other: req.user.sessions.filter((session) => session.id !== currentSession.sessionId),
         });
       },
@@ -57,7 +55,7 @@ export default typedPlugin(
           }),
           response: {
             200: z.object({
-              current: userSessionSchema,
+              current: userSessionSchema.nullable(),
               other: z.array(userSessionSchema),
             }),
           },
@@ -122,7 +120,7 @@ export default typedPlugin(
         });
 
         return res.send({
-          current: user.sessions.find((session) => session.id === currentSession.sessionId)!,
+          current: user.sessions.find((session) => session.id === currentSession.sessionId) ?? null,
           other: user.sessions.filter((session) => session.id !== currentSession.sessionId),
         });
       },

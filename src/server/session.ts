@@ -2,9 +2,11 @@ import { detectClient, ZiplineClient } from '@/lib/api/detect';
 import { config } from '@/lib/config';
 import { prisma } from '@/lib/db';
 import { randomCharacters } from '@/lib/random';
+import { parse } from 'cookie';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { IncomingMessage, ServerResponse } from 'http';
 import { getIronSession, type SessionOptions } from 'iron-session';
+import { parseUserToken } from './middleware/user';
 
 const cookieOptions: NonNullable<SessionOptions['cookieOptions']> = {
   // 2 weeks
@@ -22,6 +24,7 @@ export type ZiplineSession = {
   client: ZiplineClient;
 
   pkceVerifier?: string;
+  tokenAuth?: boolean;
 };
 
 export type ZiplineIronSession = Awaited<ReturnType<typeof getSession>>;
@@ -47,6 +50,13 @@ export async function getSession(
 
   const headers = (req as FastifyRequest).headers || (req as IncomingMessage).headers;
   session.client = detectClient(<Record<string, string>>headers);
+  const cookies = parse(headers.cookie || '');
+
+  if (headers['authorization'] && !cookies['zipline_session']) {
+    const token = parseUserToken(headers['authorization'], true);
+
+    if (token) session.tokenAuth = true;
+  }
 
   return session;
 }

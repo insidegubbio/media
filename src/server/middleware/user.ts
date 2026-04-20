@@ -22,13 +22,12 @@ export function parseUserToken(
 ): string | null {
   if (!encryptedToken) {
     if (noThrow) return null;
-    throw { error: 'no token' };
+    throw new ApiError(2001);
   }
 
   const decryptedToken = decryptToken(encryptedToken, config.core.secret);
   if (!decryptedToken) {
     if (noThrow) return null;
-    // throw { error: 'could not decrypt token' };
     throw new ApiError(2001);
   }
 
@@ -56,12 +55,7 @@ export async function userMiddleware(req: FastifyRequest, res: FastifyReply) {
   const authorization = req.headers.authorization;
 
   if (authorization) {
-    try {
-      // eslint-disable-next-line no-var
-      var token = parseUserToken(authorization);
-    } catch (e) {
-      throw e;
-    }
+    const token = parseUserToken(authorization);
 
     const user = await prisma.user.findFirst({
       where: {
@@ -77,6 +71,7 @@ export async function userMiddleware(req: FastifyRequest, res: FastifyReply) {
   }
 
   const session = await getSession(req, res);
+  if (session.tokenAuth) throw new ApiError(2004);
 
   if (!session.id || !session.sessionId) throw new ApiError(2000);
 
