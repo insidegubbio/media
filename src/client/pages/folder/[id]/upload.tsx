@@ -11,8 +11,11 @@ export async function loader({ params }: { params: Params<string> }) {
   const res = await fetch(`/api/server/folder/${params.id}`);
   if (!res.ok) throw data('Folder not found', { status: 404 });
 
+  const d = (await res.json()) as Response['/api/server/folder/[id]'];
+  if (!d.folder) throw data('Folder not found', { status: 404 });
+
   return {
-    folder: (await res.json()) as Response['/api/server/folder/[id]'],
+    folder: d.folder,
   };
 }
 

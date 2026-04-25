@@ -82,4 +82,3 @@ export function useApiPagination<T = Response['/api/user/files']>(
     mutate,
   };
 }
-
