@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
 import { zStringTrimmed } from '@/lib/validation';
+import { setPasswordCookie } from '@/lib/passwordCookie';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
 
@@ -58,13 +59,7 @@ export default typedPlugin(
           ua: req.headers['user-agent'],
         });
 
-        res.cookie('url_pw_' + url.id, req.body.password, {
-          sameSite: 'lax',
-          maxAge: 60,
-          httpOnly: false,
-          secure: false,
-          path: '/',
-        });
+        setPasswordCookie(res, 'url', url.id, req.body.password);
 
         return res.send({ success: true });
       },

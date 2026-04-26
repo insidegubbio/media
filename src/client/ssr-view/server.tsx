@@ -14,7 +14,9 @@ import { File, fileSelect } from '@/lib/db/models/file';
 import { User, userSelect } from '@/lib/db/models/user';
 import { parseString } from '@/lib/parser';
 import { parserMetrics } from '@/lib/parser/metrics';
+import { getPasswordCookie } from '@/lib/passwordCookie';
 import { createZiplineSsr } from '@/lib/ssr/createZiplineSsr';
+import { stripHtml } from '@/lib/stripHtml';
 import type { ZiplineTheme } from '@/lib/theme';
 import { readThemes } from '@/lib/theme/file';
 import * as cookie from 'cookie';
@@ -22,7 +24,6 @@ import { FastifyRequest } from 'fastify';
 import { renderToString } from 'react-dom/server';
 import { createStaticHandler, createStaticRouter, StaticRouterProvider } from 'react-router-dom';
 import { createRoutes } from './routes';
-import { stripHtml } from '@/lib/stripHtml';
 
 export const getFile = async (id: string) =>
   prisma.file.findFirst({
@@ -95,7 +96,7 @@ export async function render(
   const config = { website: { theme: zConfig.website.theme } };
 
   const cookies = cookie.parse(req.headers.cookie || '');
-  const pw = cookies[`file_pw_${file.id}`];
+  const pw = getPasswordCookie(cookies, 'file', file.id);
   const hasPassword = !!file.password;
 
   if (hasPassword) {

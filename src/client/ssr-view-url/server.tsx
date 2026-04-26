@@ -1,13 +1,13 @@
-import * as cookie from 'cookie';
-import { FastifyRequest } from 'fastify';
-
 import { config as zConfig } from '@/lib/config';
 import { Config } from '@/lib/config/validate';
 import { verifyPassword } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
+import { getPasswordCookie } from '@/lib/passwordCookie';
 import { renderHtml } from '@/lib/ssr/renderHtml';
 import { ZiplineTheme } from '@/lib/theme';
-import { createRoutes } from './routes'; // This should include the `/url/:id` route
+import * as cookie from 'cookie';
+import { FastifyRequest } from 'fastify';
+import { createRoutes } from './routes';
 
 export async function render(
   {
@@ -53,7 +53,7 @@ export async function render(
   }
 
   const cookies = cookie.parse(req.headers.cookie || '');
-  const pw = cookies[`url_pw_${urlEntry.id}`];
+  const pw = getPasswordCookie(cookies, 'url', urlEntry.id);
   const hasPassword = !!urlEntry.password;
 
   const data = {
