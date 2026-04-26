@@ -12,7 +12,11 @@ export function setPasswordCookie(res: FastifyReply, kind: 'file' | 'url', id: s
   });
 }
 
-export function getPasswordCookie(cookies: Record<string, string | undefined>, kind: 'file' | 'url', id: string) {
+export function getPasswordCookie(
+  cookies: Record<string, string | undefined>,
+  kind: 'file' | 'url',
+  id: string,
+) {
   const cookie = cookies[`${kind}_pw_${id}`];
   if (!cookie) return null;
   try {
