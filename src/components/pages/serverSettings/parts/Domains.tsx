@@ -1,19 +1,24 @@
-import { Response } from '@/lib/api/response';
+import type { Response } from '@/lib/api/response';
 import { ActionIcon, LoadingOverlay, Paper, Table, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
+import useServerSettings from '../useServerSettings';
 
-export default function Domains({
-  swr: { data, isLoading },
-}: {
-  swr: {
-    data: Response['/api/server/settings'] | undefined;
-    isLoading: boolean;
-  };
-}) {
+export default function Domains() {
+  const { data, isLoading } = useServerSettings();
+
+  return (
+    <>
+      <LoadingOverlay visible={isLoading} />
+      {data ? <Form data={data} /> : null}
+    </>
+  );
+}
+
+function Form({ data }: { data: Response['/api/server/settings'] }) {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,7 +29,7 @@ export default function Domains({
 
   const submitSettings = settingsOnSubmit(navigate, form);
 
-  const domains = Array.isArray(data?.settings.domains) ? data!.settings.domains.map(String) : [];
+  const domains = data.settings.domains.map(String);
 
   async function updateDomains(nextDomains: string[]) {
     setSubmitting(true);
@@ -56,7 +61,7 @@ export default function Domains({
 
   return (
     <>
-      <LoadingOverlay visible={isLoading || submitting} />
+      <LoadingOverlay visible={submitting} />
 
       <form onSubmit={addDomain}>
         <TextInput

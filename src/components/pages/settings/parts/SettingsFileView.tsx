@@ -1,3 +1,4 @@
+import type { User } from '@/lib/db/models/user';
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
 import { useUserStore } from '@/lib/client/store/user';
@@ -27,7 +28,6 @@ import {
   IconDeviceFloppy,
   IconFileX,
 } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { mutate } from 'swr';
 import { useShallow } from 'zustand/shallow';
 
@@ -40,19 +40,34 @@ const alignIcons: Record<string, React.ReactNode> = {
 export default function SettingsFileView() {
   const [user, setUser] = useUserStore(useShallow((state) => [state.user, state.setUser]));
 
+  if (!user) {
+    return (
+      <Paper withBorder p='sm'>
+        <Title order={2}>Viewing Files</Title>
+        <Text c='dimmed' mt='xs'>
+          Loading…
+        </Text>
+      </Paper>
+    );
+  }
+
+  return <Form user={user} setUser={setUser} />;
+}
+
+function Form({ user, setUser }: { user: User; setUser: (u: User) => void }) {
   const form = useForm({
     initialValues: {
-      enabled: user?.view.enabled ?? false,
-      content: user?.view.content ?? '',
-      embed: user?.view.embed ?? false,
-      embedTitle: user?.view.embedTitle ?? '',
-      embedDescription: user?.view.embedDescription ?? '',
-      embedSiteName: user?.view.embedSiteName ?? '',
-      embedColor: user?.view.embedColor ?? '',
-      align: user?.view.align ?? 'left',
-      showMimetype: user?.view.showMimetype ?? false,
-      showTags: user?.view.showTags ?? false,
-      showFolder: user?.view.showFolder ?? false,
+      enabled: user.view.enabled || false,
+      content: user.view.content || '',
+      embed: user.view.embed || false,
+      embedTitle: user.view.embedTitle || '',
+      embedDescription: user.view.embedDescription || '',
+      embedSiteName: user.view.embedSiteName || '',
+      embedColor: user.view.embedColor || '',
+      align: user.view.align || 'left',
+      showMimetype: user.view.showMimetype || false,
+      showTags: user.view.showTags || false,
+      showFolder: user.view.showFolder || false,
     },
   });
 
@@ -94,24 +109,6 @@ export default function SettingsFileView() {
       icon: <IconCheck size='1rem' />,
     });
   };
-
-  useEffect(() => {
-    if (user) {
-      form.setValues({
-        enabled: user.view.enabled || false,
-        content: user.view.content || '',
-        embed: user.view.embed || false,
-        embedTitle: user.view.embedTitle || '',
-        embedDescription: user.view.embedDescription || '',
-        embedSiteName: user.view.embedSiteName || '',
-        embedColor: user.view.embedColor || '',
-        align: user.view.align || 'left',
-        showMimetype: user.view.showMimetype || false,
-        showTags: user.view.showTags || false,
-        showFolder: user.view.showFolder || false,
-      });
-    }
-  }, [user]);
 
   return (
     <Paper withBorder p='sm'>

@@ -1,15 +1,16 @@
 import useSWR from 'swr';
 import { Response } from '../../api/response';
-const f = async () => {
+
+async function fetcher() {
   const res = await fetch('/api/version');
   if (!res.ok) throw new Error('Failed to fetch version');
 
   const r = await res.json();
   return r;
-};
+}
 
 export default function useVersion() {
-  const { isLoading, data } = useSWR<Response['/api/version'], Error>('/api/version', f, {
+  const { isLoading, data } = useSWR<Response['/api/version'], Error>('/api/version', fetcher, {
     refreshInterval: undefined,
     revalidateOnFocus: false,
     revalidateIfStale: false,

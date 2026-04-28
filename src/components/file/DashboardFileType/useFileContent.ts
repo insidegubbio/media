@@ -1,9 +1,31 @@
 import type { File as DbFile } from '@/lib/db/models/file';
-import { useCallback, useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { isDbFile } from './useFileUrls';
 
 const MAX_BYTES = 1 * 1024 * 1024;
 const FILE_BIG = '\n...\nThe file is too big to display click the download icon to view/download it.';
+
+async function readBlobText(file: File) {
+  const raw = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.onload = () => resolve((reader.result ?? '') as string);
+    reader.readAsText(file);
+  });
+
+  return raw.length > MAX_BYTES ? raw.slice(0, MAX_BYTES) + FILE_BIG : raw;
+}
+
+async function readText(fileUrl: string) {
+  const res = await fetch(fileUrl, {
+    headers: {
+      Range: `bytes=0-${MAX_BYTES}`,
+    },
+  });
+
+  if (!res.ok) throw new Error('Failed to fetch file');
+  return await res.text();
+}
 
 export default function useFileContent({
   enabled,
@@ -14,41 +36,32 @@ export default function useFileContent({
   file: DbFile | File;
   fileUrl: string;
 }) {
-  const [content, setContent] = useState('');
+  const { data, error } = useSWR<string>(
+    () => {
+      if (!enabled) return null;
 
-  const loadText = useCallback(async () => {
-    try {
-      if (!isDbFile(file)) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const raw = reader.result as string;
-          setContent(raw.length > MAX_BYTES ? raw.slice(0, MAX_BYTES) + FILE_BIG : raw);
-        };
-        reader.readAsText(file as File);
-        return;
-      }
+      if (isDbFile(file)) return ['dbfile', file.id] as const;
+
+      const f = file as File;
+      return ['blobfile', f.name] as const;
+    },
+    async () => {
+      if (!isDbFile(file)) return readBlobText(file as File);
 
       if (file.size > MAX_BYTES) {
-        const res = await fetch(fileUrl, { headers: { Range: `bytes=0-${MAX_BYTES}` } });
-        if (!res.ok) throw new Error('Failed to fetch file');
-        const text = await res.text();
-        setContent(text + FILE_BIG);
-        return;
+        const text = await readText(fileUrl);
+        return text + FILE_BIG;
       }
 
-      const res = await fetch(fileUrl);
-      if (!res.ok) throw new Error('Failed to fetch file');
-      const text = await res.text();
-      setContent(text);
-    } catch {
-      setContent('Error loading file.');
-    }
-  }, [file, fileUrl]);
+      return readText(fileUrl);
+    },
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    },
+  );
 
-  useEffect(() => {
-    if (!enabled) return;
-    loadText();
-  }, [enabled, loadText]);
+  if (error) return 'Error loading file.';
 
-  return content;
+  return data ?? '';
 }

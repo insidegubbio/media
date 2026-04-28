@@ -1,5 +1,6 @@
 import { Response } from '@/lib/api/response';
 import { fetchApi } from '@/lib/fetchApi';
+import useUser from '@/lib/client/hooks/useUser';
 import { useTitle } from '@/lib/client/hooks/useTitle';
 import {
   Button,
@@ -18,8 +19,8 @@ import {
 import { useForm } from '@mantine/form';
 import { notifications, showNotification } from '@mantine/notifications';
 import { IconLogin, IconPlus, IconUserPlus, IconX } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import useSWR, { mutate } from 'swr';
 import GenericError from '../../error/GenericError';
 import { getWebClient } from '@/lib/api/detect';
@@ -30,8 +31,6 @@ export function Component() {
 
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [loading, setLoading] = useState(true);
 
   const {
     data: config,
@@ -59,6 +58,8 @@ export function Component() {
     },
   );
 
+  const { user, loading: userLoading } = useUser();
+
   const form = useForm({
     initialValues: {
       username: '',
@@ -73,17 +74,6 @@ export function Component() {
       name: field,
     }),
   });
-
-  useEffect(() => {
-    (async () => {
-      const res = await fetch('/api/user');
-      if (res.ok) {
-        navigate('/dashboard');
-      } else {
-        setLoading(false);
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     if (!config) return;
@@ -138,7 +128,11 @@ export function Component() {
     }
   };
 
-  if (loading || configLoading) return <LoadingOverlay visible />;
+  if (userLoading || configLoading) return <LoadingOverlay visible />;
+
+  if (user) {
+    return <Navigate to='/dashboard' replace />;
+  }
 
   if (!config || configError) {
     return (

@@ -1,4 +1,4 @@
-import { Response } from '@/lib/api/response';
+import type { Response } from '@/lib/api/response';
 import {
   Anchor,
   Button,
@@ -13,45 +13,52 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
+import useServerSettings from '../useServerSettings';
 
-export default function Oauth({
-  swr: { data, isLoading },
-}: {
-  swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
-}) {
+export default function Oauth() {
+  const { data, isLoading } = useServerSettings();
+
+  return (
+    <>
+      <LoadingOverlay visible={isLoading} />
+      {data ? <Form data={data} isLoading={isLoading} /> : null}
+    </>
+  );
+}
+
+function Form({ data, isLoading }: { data: Response['/api/server/settings']; isLoading: boolean }) {
   const navigate = useNavigate();
 
   const form = useForm({
     initialValues: {
-      oauthBypassLocalLogin: false,
-      oauthLoginOnly: false,
+      oauthBypassLocalLogin: data.settings.oauthBypassLocalLogin,
+      oauthLoginOnly: data.settings.oauthLoginOnly,
 
-      oauthDiscordClientId: '',
-      oauthDiscordClientSecret: '',
-      oauthDiscordRedirectUri: '',
-      oauthDiscordAllowedIds: '',
-      oauthDiscordDeniedIds: '',
+      oauthDiscordClientId: data.settings.oauthDiscordClientId,
+      oauthDiscordClientSecret: data.settings.oauthDiscordClientSecret,
+      oauthDiscordRedirectUri: data.settings.oauthDiscordRedirectUri,
+      oauthDiscordAllowedIds: data.settings.oauthDiscordAllowedIds.join(', '),
+      oauthDiscordDeniedIds: data.settings.oauthDiscordDeniedIds.join(', '),
 
-      oauthGoogleClientId: '',
-      oauthGoogleClientSecret: '',
-      oauthGoogleRedirectUri: '',
+      oauthGoogleClientId: data.settings.oauthGoogleClientId,
+      oauthGoogleClientSecret: data.settings.oauthGoogleClientSecret,
+      oauthGoogleRedirectUri: data.settings.oauthGoogleRedirectUri,
 
-      oauthGithubClientId: '',
-      oauthGithubClientSecret: '',
-      oauthGithubRedirectUri: '',
+      oauthGithubClientId: data.settings.oauthGithubClientId,
+      oauthGithubClientSecret: data.settings.oauthGithubClientSecret,
+      oauthGithubRedirectUri: data.settings.oauthGithubRedirectUri,
 
-      oauthOidcClientId: '',
-      oauthOidcClientSecret: '',
-      oauthOidcAuthorizeUrl: '',
-      oauthOidcTokenUrl: '',
-      oauthOidcUserinfoUrl: '',
-      oauthOidcRedirectUri: '',
+      oauthOidcClientId: data.settings.oauthOidcClientId,
+      oauthOidcClientSecret: data.settings.oauthOidcClientSecret,
+      oauthOidcAuthorizeUrl: data.settings.oauthOidcAuthorizeUrl,
+      oauthOidcTokenUrl: data.settings.oauthOidcTokenUrl,
+      oauthOidcUserinfoUrl: data.settings.oauthOidcUserinfoUrl,
+      oauthOidcRedirectUri: data.settings.oauthOidcRedirectUri,
     },
     enhanceGetInputProps: (payload) => ({
-      disabled: data?.tampered?.includes(payload.field) || false,
+      disabled: data.tampered.includes(payload.field) || false,
     }),
   });
 
@@ -90,44 +97,8 @@ export default function Oauth({
     return settingsOnSubmit(navigate, form)(values);
   };
 
-  useEffect(() => {
-    if (!data) return;
-
-    form.setValues({
-      oauthBypassLocalLogin: data.settings.oauthBypassLocalLogin ?? false,
-      oauthLoginOnly: data.settings.oauthLoginOnly ?? false,
-
-      oauthDiscordClientId: data.settings.oauthDiscordClientId ?? '',
-      oauthDiscordClientSecret: data.settings.oauthDiscordClientSecret ?? '',
-      oauthDiscordRedirectUri: data.settings.oauthDiscordRedirectUri ?? '',
-      oauthDiscordAllowedIds: data.settings.oauthDiscordAllowedIds
-        ? data.settings.oauthDiscordAllowedIds.join(', ')
-        : '',
-      oauthDiscordDeniedIds: data.settings.oauthDiscordDeniedIds
-        ? data.settings.oauthDiscordDeniedIds.join(', ')
-        : '',
-
-      oauthGoogleClientId: data.settings.oauthGoogleClientId ?? '',
-      oauthGoogleClientSecret: data.settings.oauthGoogleClientSecret ?? '',
-      oauthGoogleRedirectUri: data.settings.oauthGoogleRedirectUri ?? '',
-
-      oauthGithubClientId: data.settings.oauthGithubClientId ?? '',
-      oauthGithubClientSecret: data.settings.oauthGithubClientSecret ?? '',
-      oauthGithubRedirectUri: data.settings.oauthGithubRedirectUri ?? '',
-
-      oauthOidcClientId: data.settings.oauthOidcClientId ?? '',
-      oauthOidcClientSecret: data.settings.oauthOidcClientSecret ?? '',
-      oauthOidcAuthorizeUrl: data.settings.oauthOidcAuthorizeUrl ?? '',
-      oauthOidcTokenUrl: data.settings.oauthOidcTokenUrl ?? '',
-      oauthOidcUserinfoUrl: data.settings.oauthOidcUserinfoUrl ?? '',
-      oauthOidcRedirectUri: data.settings.oauthOidcRedirectUri ?? '',
-    });
-  }, [data]);
-
   return (
     <>
-      <LoadingOverlay visible={isLoading} />
-
       <Text size='sm' c='dimmed' mb='md'>
         For OAuth to work, the &quot;OAuth Registration&quot; setting must be enabled in the{' '}
         <Anchor component={Link} to='/dashboard/admin/settings/features'>

@@ -1,4 +1,4 @@
-import { Response } from '@/lib/api/response';
+import type { Response } from '@/lib/api/response';
 import {
   Button,
   Collapse,
@@ -13,24 +13,31 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
+import useServerSettings from '../useServerSettings';
 
 type DiscordEmbed = Record<string, any>;
 
-export default function Discord({
-  swr: { data, isLoading },
-}: {
-  swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
-}) {
+export default function Discord() {
+  const { data, isLoading } = useServerSettings();
+
+  return (
+    <>
+      <LoadingOverlay visible={isLoading} />
+      {data ? <Form data={data} isLoading={isLoading} /> : null}
+    </>
+  );
+}
+
+function Form({ data, isLoading }: { data: Response['/api/server/settings']; isLoading: boolean }) {
   const navigate = useNavigate();
 
   const formMain = useForm({
     initialValues: {
-      discordWebhookUrl: '',
-      discordUsername: '',
-      discordAvatarUrl: '',
+      discordWebhookUrl: data.settings.discordWebhookUrl,
+      discordUsername: data.settings.discordUsername,
+      discordAvatarUrl: data.settings.discordAvatarUrl,
     },
   });
 
@@ -49,42 +56,46 @@ export default function Discord({
 
   const formOnUpload = useForm({
     initialValues: {
-      discordOnUploadWebhookUrl: '',
-      discordOnUploadUsername: '',
-      discordOnUploadAvatarUrl: '',
+      discordOnUploadWebhookUrl: data.settings.discordOnUploadWebhookUrl,
+      discordOnUploadUsername: data.settings.discordOnUploadUsername,
+      discordOnUploadAvatarUrl: data.settings.discordOnUploadAvatarUrl,
 
-      discordOnUploadContent: '',
+      discordOnUploadContent: data.settings.discordOnUploadContent,
 
-      discordOnUploadEmbed: false,
-      discordOnUploadEmbedTitle: '',
-      discordOnUploadEmbedDescription: '',
-      discordOnUploadEmbedFooter: '',
-      discordOnUploadEmbedColor: '',
-      discordOnUploadEmbedThumbnail: false,
-      discordOnUploadEmbedImageOrVideo: false,
-      discordOnUploadEmbedTimestamp: false,
-      discordOnUploadEmbedUrl: false,
+      discordOnUploadEmbed: Boolean(data.settings.discordOnUploadEmbed),
+      discordOnUploadEmbedTitle: (data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.title || '',
+      discordOnUploadEmbedDescription:
+        (data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.description || '',
+      discordOnUploadEmbedFooter: (data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.footer || '',
+      discordOnUploadEmbedColor: (data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.color || '',
+      discordOnUploadEmbedThumbnail: !!(data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.thumbnail,
+      discordOnUploadEmbedImageOrVideo: !!(data.settings.discordOnUploadEmbed as DiscordEmbed | null)
+        ?.imageOrVideo,
+      discordOnUploadEmbedTimestamp: !!(data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.timestamp,
+      discordOnUploadEmbedUrl: !!(data.settings.discordOnUploadEmbed as DiscordEmbed | null)?.url,
     },
     enhanceGetInputProps: (payload) => ({
-      disabled: data?.tampered?.includes(payload.field) || false,
+      disabled: data.tampered.includes(payload.field) || false,
     }),
   });
 
   const formOnShorten = useForm({
     initialValues: {
-      discordOnShortenWebhookUrl: '',
-      discordOnShortenUsername: '',
-      discordOnShortenAvatarUrl: '',
+      discordOnShortenWebhookUrl: data.settings.discordOnShortenWebhookUrl,
+      discordOnShortenUsername: data.settings.discordOnShortenUsername,
+      discordOnShortenAvatarUrl: data.settings.discordOnShortenAvatarUrl,
 
-      discordOnShortenContent: '',
+      discordOnShortenContent: data.settings.discordOnShortenContent,
 
-      discordOnShortenEmbed: false,
-      discordOnShortenEmbedTitle: '',
-      discordOnShortenEmbedDescription: '',
-      discordOnShortenEmbedFooter: '',
-      discordOnShortenEmbedColor: '',
-      discordOnShortenEmbedTimestamp: false,
-      discordOnShortenEmbedUrl: false,
+      discordOnShortenEmbed: Boolean(data.settings.discordOnShortenEmbed),
+      discordOnShortenEmbedTitle: (data.settings.discordOnShortenEmbed as DiscordEmbed | null)?.title || '',
+      discordOnShortenEmbedDescription:
+        (data.settings.discordOnShortenEmbed as DiscordEmbed | null)?.description || '',
+      discordOnShortenEmbedFooter: (data.settings.discordOnShortenEmbed as DiscordEmbed | null)?.footer || '',
+      discordOnShortenEmbedColor: (data.settings.discordOnShortenEmbed as DiscordEmbed | null)?.color || '',
+      discordOnShortenEmbedTimestamp: !!(data.settings.discordOnShortenEmbed as DiscordEmbed | null)
+        ?.timestamp,
+      discordOnShortenEmbedUrl: !!(data.settings.discordOnShortenEmbed as DiscordEmbed | null)?.url,
     },
   });
 
@@ -123,56 +134,8 @@ export default function Discord({
     return settingsOnSubmit(navigate, type === 'upload' ? formOnUpload : formOnShorten)(sendValues);
   };
 
-  useEffect(() => {
-    if (!data) return;
-
-    formMain.setValues({
-      discordWebhookUrl: data.settings.discordWebhookUrl ?? '',
-      discordUsername: data.settings.discordUsername ?? '',
-      discordAvatarUrl: data.settings.discordAvatarUrl ?? '',
-    });
-
-    formOnUpload.setValues({
-      discordOnUploadWebhookUrl: data.settings.discordOnUploadWebhookUrl ?? '',
-      discordOnUploadUsername: data.settings.discordOnUploadUsername ?? '',
-      discordOnUploadAvatarUrl: data.settings.discordOnUploadAvatarUrl ?? '',
-
-      discordOnUploadContent: data.settings.discordOnUploadContent ?? '',
-      discordOnUploadEmbed: data.settings.discordOnUploadEmbed ? true : false,
-      discordOnUploadEmbedTitle: (data.settings.discordOnUploadEmbed as DiscordEmbed)?.title ?? '',
-      discordOnUploadEmbedDescription:
-        (data.settings.discordOnUploadEmbed as DiscordEmbed)?.description ?? '',
-      discordOnUploadEmbedFooter: (data.settings.discordOnUploadEmbed as DiscordEmbed)?.footer ?? '',
-      discordOnUploadEmbedColor: (data.settings.discordOnUploadEmbed as DiscordEmbed)?.color ?? '',
-      discordOnUploadEmbedThumbnail: (data.settings.discordOnUploadEmbed as DiscordEmbed)?.thumbnail ?? false,
-      discordOnUploadEmbedImageOrVideo:
-        (data.settings.discordOnUploadEmbed as DiscordEmbed)?.imageOrVideo ?? false,
-      discordOnUploadEmbedTimestamp: (data.settings.discordOnUploadEmbed as DiscordEmbed)?.timestamp ?? false,
-      discordOnUploadEmbedUrl: (data.settings.discordOnUploadEmbed as DiscordEmbed)?.url ?? false,
-    });
-
-    formOnShorten.setValues({
-      discordOnShortenWebhookUrl: data.settings.discordOnShortenWebhookUrl ?? '',
-      discordOnShortenUsername: data.settings.discordOnShortenUsername ?? '',
-      discordOnShortenAvatarUrl: data.settings.discordOnShortenAvatarUrl ?? '',
-
-      discordOnShortenContent: data.settings.discordOnShortenContent ?? '',
-      discordOnShortenEmbed: data.settings.discordOnShortenEmbed ? true : false,
-      discordOnShortenEmbedTitle: (data.settings.discordOnShortenEmbed as DiscordEmbed)?.title ?? '',
-      discordOnShortenEmbedDescription:
-        (data.settings.discordOnShortenEmbed as DiscordEmbed)?.description ?? '',
-      discordOnShortenEmbedFooter: (data.settings.discordOnShortenEmbed as DiscordEmbed)?.footer ?? '',
-      discordOnShortenEmbedColor: (data.settings.discordOnShortenEmbed as DiscordEmbed)?.color ?? '',
-      discordOnShortenEmbedTimestamp:
-        (data.settings.discordOnShortenEmbed as DiscordEmbed)?.timestamp ?? false,
-      discordOnShortenEmbedUrl: (data.settings.discordOnShortenEmbed as DiscordEmbed)?.url ?? false,
-    });
-  }, [data]);
-
   return (
     <>
-      <LoadingOverlay visible={isLoading} />
-
       <form onSubmit={formMain.onSubmit(onSubmitMain)}>
         <TextInput
           label='Webhook URL'

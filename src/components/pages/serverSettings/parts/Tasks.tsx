@@ -1,51 +1,43 @@
-import { Response } from '@/lib/api/response';
+import type { Response } from '@/lib/api/response';
 import { Button, Code, LoadingOverlay, Stack, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
+import useServerSettings from '../useServerSettings';
 
-export default function Tasks({
-  swr: { data, isLoading },
-}: {
-  swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
-}) {
+export default function Tasks() {
+  const { data, isLoading } = useServerSettings();
+
+  return (
+    <>
+      <LoadingOverlay visible={isLoading} />
+      {data ? <Form data={data} isLoading={isLoading} /> : null}
+    </>
+  );
+}
+
+function Form({ data, isLoading }: { data: Response['/api/server/settings']; isLoading: boolean }) {
   const navigate = useNavigate();
 
   const form = useForm({
     initialValues: {
-      tasksDeleteInterval: '30m',
-      tasksClearInvitesInterval: '30m',
-      tasksMaxViewsInterval: '30m',
-      tasksThumbnailsInterval: '30m',
-      tasksMetricsInterval: '30m',
-      tasksCleanThumbnailsInterval: '1d',
+      tasksDeleteInterval: data.settings.tasksDeleteInterval,
+      tasksClearInvitesInterval: data.settings.tasksClearInvitesInterval,
+      tasksMaxViewsInterval: data.settings.tasksMaxViewsInterval,
+      tasksThumbnailsInterval: data.settings.tasksThumbnailsInterval,
+      tasksMetricsInterval: data.settings.tasksMetricsInterval,
+      tasksCleanThumbnailsInterval: data.settings.tasksCleanThumbnailsInterval,
     },
     enhanceGetInputProps: (payload) => ({
-      disabled: data?.tampered?.includes(payload.field) || false,
+      disabled: data.tampered.includes(payload.field) || false,
     }),
   });
 
   const onSubmit = settingsOnSubmit(navigate, form);
 
-  useEffect(() => {
-    if (!data) return;
-
-    form.setValues({
-      tasksDeleteInterval: data.settings.tasksDeleteInterval ?? '30m',
-      tasksClearInvitesInterval: data.settings.tasksClearInvitesInterval ?? '30m',
-      tasksMaxViewsInterval: data.settings.tasksMaxViewsInterval ?? '30m',
-      tasksThumbnailsInterval: data.settings.tasksThumbnailsInterval ?? '30m',
-      tasksMetricsInterval: data.settings.tasksMetricsInterval ?? '30m',
-      tasksCleanThumbnailsInterval: data.settings.tasksCleanThumbnailsInterval ?? '1d',
-    });
-  }, [data]);
-
   return (
     <>
-      <LoadingOverlay visible={isLoading} />
-
       <Text size='sm' c='dimmed' mb='md'>
         All options require a restart to take effect. Setting a value of <Code>0</Code> will disable the task.
       </Text>

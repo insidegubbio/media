@@ -1,30 +1,37 @@
-import { Response } from '@/lib/api/response';
+import type { Response } from '@/lib/api/response';
 import { Button, ColorInput, Group, LoadingOverlay, Stack, Switch, Text, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconDeviceFloppy, IconRefresh } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsOnSubmit } from '../settingsOnSubmit';
+import useServerSettings from '../useServerSettings';
 
-export default function PWA({
-  swr: { data, isLoading },
-}: {
-  swr: { data: Response['/api/server/settings'] | undefined; isLoading: boolean };
-}) {
+export default function PWA() {
+  const { data, isLoading } = useServerSettings();
+
+  return (
+    <>
+      <LoadingOverlay visible={isLoading} />
+      {data ? <Form data={data} isLoading={isLoading} /> : null}
+    </>
+  );
+}
+
+function Form({ data, isLoading }: { data: Response['/api/server/settings']; isLoading: boolean }) {
   const navigate = useNavigate();
 
   const form = useForm({
     initialValues: {
-      pwaEnabled: false,
-      pwaTitle: '',
-      pwaShortName: '',
-      pwaDescription: '',
-      pwaThemeColor: '',
-      pwaBackgroundColor: '',
+      pwaEnabled: data.settings.pwaEnabled,
+      pwaTitle: data.settings.pwaTitle,
+      pwaShortName: data.settings.pwaShortName,
+      pwaDescription: data.settings.pwaDescription,
+      pwaThemeColor: data.settings.pwaThemeColor,
+      pwaBackgroundColor: data.settings.pwaBackgroundColor,
     },
     enhanceGetInputProps: (payload: any): object => ({
       disabled:
-        data?.tampered?.includes(payload.field) ||
+        data.tampered.includes(payload.field) ||
         (payload.field !== 'pwaEnabled' && !form.values.pwaEnabled) ||
         false,
     }),
@@ -48,23 +55,8 @@ export default function PWA({
     });
   };
 
-  useEffect(() => {
-    if (!data) return;
-
-    form.setValues({
-      pwaEnabled: data.settings.pwaEnabled ?? false,
-      pwaTitle: data.settings.pwaTitle ?? '',
-      pwaShortName: data.settings.pwaShortName ?? '',
-      pwaDescription: data.settings.pwaDescription ?? '',
-      pwaThemeColor: data.settings.pwaThemeColor ?? '',
-      pwaBackgroundColor: data.settings.pwaBackgroundColor ?? '',
-    });
-  }, [data]);
-
   return (
     <>
-      <LoadingOverlay visible={isLoading} />
-
       <Text size='sm' c='dimmed' mb='md'>
         Refresh the page after enabling PWA to see any changes.
       </Text>

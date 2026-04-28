@@ -189,7 +189,7 @@ export default function DashboardServerSettings() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { data, isLoading } = useSWR<Response['/api/server/settings']>('/api/server/settings');
+  const { data } = useSWR<Response['/api/server/settings']>('/api/server/settings');
   const [opened, { toggle }] = useDisclosure(false);
 
   const toSettingSection = useCallback((settingKey: string) => {
@@ -328,7 +328,7 @@ export default function DashboardServerSettings() {
               </Box>
             }
           >
-            <SettingsComponent swr={{ data, isLoading }} />
+            <SettingsComponent />
           </Suspense>
         </Box>
       ) : (

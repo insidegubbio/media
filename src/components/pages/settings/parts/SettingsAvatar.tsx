@@ -25,7 +25,7 @@ import {
   IconSettingsFilled,
   IconX,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function SettingsAvatar() {
   const user = useUserStore((state) => state.user);
@@ -36,14 +36,16 @@ export default function SettingsAvatar() {
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      if (!avatar) return;
+  const onAvatarChange = async (file: File | null) => {
+    setAvatar(file);
 
-      const base64url = await readToDataURL(avatar);
-      setAvatarSrc(base64url);
-    })();
-  }, [avatar]);
+    if (!file) {
+      setAvatarSrc(null);
+      return;
+    }
+
+    setAvatarSrc(await readToDataURL(file));
+  };
 
   const saveAvatar = async () => {
     if (!avatar) return;
@@ -111,7 +113,7 @@ export default function SettingsAvatar() {
           accept='image/*'
           placeholder='Upload new avatar...'
           value={avatar}
-          onChange={(file) => setAvatar(file)}
+          onChange={onAvatarChange}
           leftSection={<IconPhotoUp size='1rem' />}
         />
 
