@@ -67,12 +67,8 @@ export default function UploadFile({ title, folder }: { title?: string; folder?:
 
   const upload = async () => {
     const maxBytes = config.chunks.enabled && bytes(config.chunks.max);
-    const partialUploads: File[] = maxBytes
-      ? files.filter((file) => file.size >= maxBytes)
-      : [];
-    const normalUploads: File[] = maxBytes
-      ? files.filter((file) => file.size < maxBytes)
-      : files;
+    const partialUploads: File[] = maxBytes ? files.filter((file) => file.size >= maxBytes) : [];
+    const normalUploads: File[] = maxBytes ? files.filter((file) => file.size < maxBytes) : files;
 
     if (normalUploads.length > 0) {
       const size = normalUploads.reduce((acc, file) => acc + file.size, 0);
