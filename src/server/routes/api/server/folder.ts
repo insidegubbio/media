@@ -24,12 +24,14 @@ export default typedPlugin(
           params: z.object({
             id: z.string(),
           }),
-          querystring: paginationQs.pick({
-            page: true,
-            perpage: true,
-            sortBy: true,
-            order: true,
-          }),
+          querystring: paginationQs
+            .pick({
+              page: true,
+              perpage: true,
+              sortBy: true,
+              order: true,
+            })
+            .partial(),
           response: {
             200: z.object({
               folder: folderSchema.partial(),
@@ -42,7 +44,6 @@ export default typedPlugin(
       },
       async (req, res) => {
         const { id } = req.params;
-        const { page, perpage, sortBy, order } = req.query;
 
         const folder = await prisma.folder.findUnique({
           where: { id },
@@ -68,6 +69,25 @@ export default typedPlugin(
         if (!folder) throw new ApiError(9002);
         if (!folder.public && !folder.allowUploads) throw new ApiError(9002);
 
+        if (folder.allowUploads) {
+          return res.send({
+            folder: {
+              id: folder.id,
+              name: folder.name,
+              allowUploads: folder.allowUploads,
+              public: folder.public,
+            },
+            page: [],
+            total: 0,
+            pages: 0,
+          });
+        }
+
+        const { page, perpage, sortBy, order } = req.query;
+        if (!page || !perpage || !sortBy || !order) {
+          throw new ApiError(1001, 'Missing pagination or sorting parameters');
+        }
+
         const where = { folderId: folder.id };
         const total = await prisma.file.count({ where });
         const pages = total === 0 ? 0 : Math.ceil(total / perpage);
@@ -84,20 +104,6 @@ export default typedPlugin(
           }),
           true,
         );
-
-        if (!folder.public && folder.allowUploads) {
-          return res.send({
-            folder: {
-              id: folder.id,
-              name: folder.name,
-              allowUploads: folder.allowUploads,
-              public: folder.public,
-            },
-            page: [],
-            total,
-            pages,
-          });
-        }
 
         if (folder.parentId) {
           folder.parent = await buildPublicParentChain(folder.parentId);
