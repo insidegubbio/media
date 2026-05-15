@@ -3,14 +3,15 @@ FROM node:24-alpine3.22 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-RUN corepack enable && \
-    apk add --no-cache ffmpeg=6.1.2-r2 tzdata=2026b-r0
+RUN corepack enable \
+    && apk add --no-cache ffmpeg=6.1.2-r2 tzdata=2026b-r0
 
 WORKDIR /zipline
 
 COPY prisma ./prisma
 COPY package.json .
 COPY pnpm-lock.yaml .
+COPY pnpm-workspace.yaml .
 
 FROM base AS deps
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
@@ -45,8 +46,8 @@ COPY --from=builder /zipline/build ./build
 COPY --from=builder /zipline/mimes.json ./mimes.json
 COPY --from=builder /zipline/code.json ./code.json
 
-RUN pnpm prisma generate && \
-    rm -rf /tmp/* /root/*
+RUN pnpm prisma generate \
+    && rm -rf /tmp/* /root/*
 
 ENV NODE_ENV=production
 ENV ZIPLINE_ROOT=/zipline
