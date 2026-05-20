@@ -63,6 +63,7 @@ export const API_ERRORS = {
   1062: 'No files in multipart/form-data request',
   1063: 'Already linked to this OAuth provider',
   1064: 'Invalid OAuth state parameter',
+  1065: 'Invalid MIME type',
 
   // 2xxx, session errors
   2000: 'Invalid login session',
