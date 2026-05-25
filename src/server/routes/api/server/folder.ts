@@ -20,7 +20,7 @@ export default typedPlugin(
       PATH,
       {
         schema: {
-          description: 'Fetch a folder by ID. Behavior varies based on public and allowUploads flags.',
+          description: 'Fetch a folder by ID/name. Behavior varies based on public and allowUploads flags.',
           params: z.object({
             id: z.string(),
           }),
@@ -45,8 +45,10 @@ export default typedPlugin(
       async (req, res) => {
         const { id } = req.params;
 
-        const folder = await prisma.folder.findUnique({
-          where: { id },
+        const folder = await prisma.folder.findFirst({
+          where: {
+            OR: [{ id }, { name: id }],
+          },
           include: {
             children: {
               where: { public: true },
