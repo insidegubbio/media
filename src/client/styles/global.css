@@ -5,3 +5,7 @@
   font-weight: 700;
   font-size: var(--mantine-font-size-xl);
 }
+
+.mantine-Table-th {
+  font-weight: 800;
+}

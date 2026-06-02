@@ -1,12 +1,20 @@
 import { bytes } from '@/lib/bytes';
-import { Metric } from '@/lib/db/models/metric';
-import { LineChart, ChartTooltip } from '@mantine/charts';
+import { MetricsPoint } from '@/lib/metrics';
+import { ChartTooltip, LineChart } from '@mantine/charts';
 import { Paper, Title } from '@mantine/core';
+import { useMemo } from 'react';
 import { defaultChartProps } from '../statsHelpers';
 
-export default function StorageGraph({ metrics }: { metrics: Metric[] }) {
-  const sortedMetrics = metrics.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+export default function StorageGraph({ points }: { points: MetricsPoint[] }) {
+  const data = useMemo(
+    () =>
+      points
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        .map((point) => ({
+          date: new Date(point.createdAt).getTime(),
+          storage: point.storage,
+        })),
+    [points],
   );
 
   return (
@@ -16,10 +24,7 @@ export default function StorageGraph({ metrics }: { metrics: Metric[] }) {
       </Title>
 
       <LineChart
-        data={sortedMetrics.map((metric) => ({
-          date: new Date(metric.createdAt).getTime(),
-          storage: metric.data.storage,
-        }))}
+        data={data}
         series={[
           {
             name: 'storage',

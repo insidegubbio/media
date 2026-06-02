@@ -9,6 +9,7 @@ import {
   parseThemeColor,
   rgba,
   Select,
+  TableTh,
   VariantColorsResolver,
 } from '@mantine/core';
 

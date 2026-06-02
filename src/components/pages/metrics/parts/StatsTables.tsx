@@ -94,10 +94,10 @@ export function StatsTablesSkeleton() {
   );
 }
 
-export default function StatsTables({ data }: { data: Metric[] }) {
-  if (!data.length) return null;
+export default function StatsTables({ latest }: { latest: Metric | null }) {
+  if (!latest) return null;
 
-  const recent = data[0]; // it is sorted by desc so 0 is the first one.
+  const recent = latest;
 
   if (recent.data.filesUsers.length === 0 || recent.data.urlsUsers.length === 0) return null;
 
