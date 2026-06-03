@@ -133,6 +133,7 @@ export default typedPlugin(
               id: {
                 in: files,
               },
+              userId: req.user.id,
             },
             select: {
               id: true,
