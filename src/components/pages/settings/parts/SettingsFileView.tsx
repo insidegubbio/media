@@ -58,6 +58,7 @@ function Form({ user, setUser }: { user: User; setUser: (u: User) => void }) {
   const form = useForm({
     initialValues: {
       enabled: user.view.enabled || false,
+      disableTextFiles: user.view.disableTextFiles || false,
       content: user.view.content || '',
       embed: user.view.embed || false,
       embedMediaOnly: user.view.embedMediaOnly || false,
@@ -73,8 +74,9 @@ function Form({ user, setUser }: { user: User; setUser: (u: User) => void }) {
   });
 
   const onSubmit = async (values: typeof form.values) => {
-    const valuesTrimmed = {
+    const view = {
       enabled: values.enabled,
+      disableTextFiles: values.disableTextFiles,
       embed: values.embed,
       embedMediaOnly: values.embed ? false : values.embedMediaOnly,
       content: values.content.trim() || null,
@@ -89,7 +91,7 @@ function Form({ user, setUser }: { user: User; setUser: (u: User) => void }) {
     };
 
     const { data, error } = await fetchApi<Response['/api/user']>('/api/user', 'PATCH', {
-      view: valuesTrimmed,
+      view,
     });
 
     if (!data && error) {
@@ -124,6 +126,12 @@ function Form({ user, setUser }: { user: User; setUser: (u: User) => void }) {
       <Stack gap='sm' mt='xs'>
         <form onSubmit={form.onSubmit(onSubmit)}>
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing='sm' mb='xs'>
+            <Switch
+              label='Disable text files'
+              description='Disable viewing text files through view-routes. This has no effect on other file types and will work even if view-routes are disabled.'
+              {...form.getInputProps('disableTextFiles', { type: 'checkbox' })}
+            />
+
             <Switch
               label='Enable View Routes'
               description='Enable viewing files through customizable view-routes'

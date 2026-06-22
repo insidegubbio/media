@@ -27,6 +27,7 @@ export const limitedUserSelect = {
 export const userViewSchema = z
   .object({
     enabled: z.boolean().nullish(),
+    disableTextFiles: z.boolean().nullish(),
     align: z.enum(['left', 'center', 'right']).nullish(),
     showMimetype: z.boolean().nullish(),
     showTags: z.boolean().nullish(),

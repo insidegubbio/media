@@ -58,6 +58,7 @@ export default typedPlugin(
                 embedColor: z.string().nullish(),
                 embedSiteName: z.string().nullish(),
                 enabled: z.boolean().optional(),
+                disableTextFiles: z.boolean().optional(),
                 align: z.enum(['left', 'center', 'right']).optional(),
                 showMimetype: z.boolean().optional(),
                 showTags: z.boolean().optional(),
@@ -100,6 +101,9 @@ export default typedPlugin(
               view: {
                 ...req.user.view,
                 ...(req.body.view.enabled !== undefined && { enabled: req.body.view.enabled || false }),
+                ...(req.body.view.disableTextFiles !== undefined && {
+                  disableTextFiles: req.body.view.disableTextFiles || false,
+                }),
                 ...(req.body.view.content !== undefined && { content: req.body.view.content || null }),
                 ...(req.body.view.embed !== undefined && { embed: req.body.view.embed || false }),
                 ...(req.body.view.embedMediaOnly !== undefined && {
