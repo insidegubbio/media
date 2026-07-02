@@ -13,6 +13,7 @@ export const fileSelect = {
   id: true,
   originalName: true,
   name: true,
+  s3Key: true,
   size: true,
   type: true,
   views: true,
