@@ -24,6 +24,7 @@ export type PartialWorkerData = {
     id: string;
     filename: string;
     type: string;
+    s3Key: string | null;
   };
   options: UploadOptions;
   domain: string;
@@ -152,7 +153,7 @@ async function main() {
         client: s3datasource.client,
         params: {
           Bucket: s3datasource.options.bucket,
-          Key: s3datasource.key(file.filename),
+          Key: s3datasource.key(file.s3Key ?? file.filename),
           Body: bodyStream,
         },
         partSize: bytes(config.chunks.size),

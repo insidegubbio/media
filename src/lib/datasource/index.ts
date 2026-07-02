@@ -53,4 +53,9 @@ if (!global.__datasource__ && !datasource && isMainThread) {
     });
 }
 
+// Returns the correct storage key for a file.
+export function datasourceKey(file: { name: string; s3Key?: string | null }): string {
+  return file.s3Key ?? file.name;
+}
+
 export { datasource, getDatasource };

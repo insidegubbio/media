@@ -1,5 +1,5 @@
 import { ApiError } from '@/lib/api/errors';
-import { datasource } from '@/lib/datasource';
+import { datasource, datasourceKey } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { secondlyRatelimit } from '@/lib/ratelimits';
@@ -181,7 +181,7 @@ export default typedPlugin(
 
         if (delete_datasourceFiles) {
           for (let i = 0; i !== toDeleteFiles.length; ++i) {
-            await datasource.delete(toDeleteFiles[i].name);
+            await datasource.delete(datasourceKey(toDeleteFiles[i]));
           }
 
           logger.info(`${req.user.username} deleted ${toDeleteFiles.length} files from datasource`, {

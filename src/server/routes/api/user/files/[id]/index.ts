@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api/errors';
 import { bytes } from '@/lib/bytes';
 import { hashPassword } from '@/lib/crypto';
-import { datasource } from '@/lib/datasource';
+import { datasource, datasourceKey } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { File, fileSchema, fileSelect } from '@/lib/db/models/file';
 import { log } from '@/lib/logger';
@@ -137,8 +137,13 @@ export default typedPlugin(
 
           data.name = name;
 
+          if (file.s3Key) {
+            const prefix = file.s3Key.substring(0, file.s3Key.lastIndexOf('/') + 1);
+            data.s3Key = prefix + name;
+          }
+
           try {
-            await datasource.rename(file.name, data.name);
+            await datasource.rename(datasourceKey(file), data.name as string);
           } catch (error) {
             logger.error('Failed to rename file in datasource', { error });
             throw new ApiError(6002);
@@ -196,7 +201,7 @@ export default typedPlugin(
           select: fileSelect,
         });
 
-        await datasource.delete(deletedFile.name);
+        await datasource.delete(datasourceKey(deletedFile));
 
         logger.info(`${req.user.username} deleted file ${deletedFile.name}`, {
           size: bytes(deletedFile.size),

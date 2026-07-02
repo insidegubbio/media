@@ -94,6 +94,17 @@ export default typedPlugin(
             where: {
               id: options.folder,
             },
+            include: {
+              parent: {
+                include: {
+                  parent: {
+                    include: {
+                      parent: true,
+                    },
+                  },
+                },
+              },
+            },
           });
           if (!folder) throw new ApiError(4001);
           if (!req.user && !folder.allowUploads) throw new ApiError(3002);
@@ -225,12 +236,22 @@ export default typedPlugin(
 
           data.deletesAt = options.deletesAt && options.deletesAt !== 'never' ? options.deletesAt : null;
 
+          // Costruisce il path S3 percorrendo la catena folder (es. "vacanze/estate/foto.jpg")
+          const s3FolderPrefix = (() => {
+            if (!folder) return '';
+            const parts: string[] = [];
+            let cur: { name: string; parent?: any } | null | undefined = folder;
+            while (cur) { parts.unshift(cur.name); cur = cur.parent ?? null; }
+            return parts.join('/');
+          })();
+          if (s3FolderPrefix) data.s3Key = `${s3FolderPrefix}/${data.name as string}`;
+
           const fileUpload = await prisma.file.create({
             data,
             select: fileSelect,
           });
 
-          await datasource.put(fileUpload.name, compressed?.buffer ?? file.filepath, {
+          await datasource.put(fileUpload.s3Key ?? fileUpload.name, compressed?.buffer ?? file.filepath, {
             mimetype: fileUpload.type,
           });
 
