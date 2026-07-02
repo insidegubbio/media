@@ -1,0 +1,1 @@
+ALTER TABLE "public"."File" ADD COLUMN IF NOT EXISTS "s3Key" TEXT;
