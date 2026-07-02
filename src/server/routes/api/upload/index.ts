@@ -241,7 +241,10 @@ export default typedPlugin(
             if (!folder) return '';
             const parts: string[] = [];
             let cur: { name: string; parent?: any } | null | undefined = folder;
-            while (cur) { parts.unshift(cur.name); cur = cur.parent ?? null; }
+            while (cur) {
+              parts.unshift(cur.name);
+              cur = cur.parent ?? null;
+            }
             return parts.join('/');
           })();
           if (s3FolderPrefix) data.s3Key = `${s3FolderPrefix}/${data.name as string}`;
